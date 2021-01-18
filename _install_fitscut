@@ -1,0 +1,50 @@
+#!/bin/bash -eu
+
+# install fitscut and required libraries
+
+# some guidance from https://github.com/spacetelescope/caldp/blob/master/scripts/caldp-install-fitscut
+
+CFITSIO_VERSION=3.49
+WCSTOOLS_VERSION=3.9.6
+
+pushd .
+
+mkdir -p build
+cd build
+
+# cfitsio
+test ! -e cfitsio-${CFITSIO_VERSION}.tar.gz && wget https://heasarc.gsfc.nasa.gov/FTP/software/fitsio/c/cfitsio-${CFITSIO_VERSION}.tar.gz
+tar xzf cfitsio-${CFITSIO_VERSION}.tar.gz
+cd cfitsio-${CFITSIO_VERSION}
+./configure --prefix=$VIRTUAL_ENV && make && make install
+cd ..
+
+# wcs tools
+test ! -e wcstools-${WCSTOOLS_VERSION}.tar.gz && wget https://tdc-www.harvard.edu/software/wcstools/wcstools-${WCSTOOLS_VERSION}.tar.gz
+tar xzf wcstools-${WCSTOOLS_VERSION}.tar.gz
+cd wcstools-${WCSTOOLS_VERSION}
+make
+install -Dt ${VIRTUAL_ENV}/include/libwcs libwcs/*.h
+install -t ${VIRTUAL_ENV}/lib libwcs/*.a
+install -t ${VIRTUAL_ENV}/bin bin/*
+cd ..
+
+# best way to ensure correct jpeg library version?
+test ! -e jpegsrc.v6b.tar.gz && wget --content-disposition https://sourceforge.net/projects/libjpeg/files/libjpeg/6b/jpegsrc.v6b.tar.gz/download
+tar xzf jpegsrc.v6b.tar.gz
+cd jpeg-6b
+mkdir -p $VIRTUAL_ENV/man/man1
+test !- libtool && ln -s /usr/bin/libtool
+./configure --enable-shared --prefix=$VIRTUAL_ENV && make && make install
+cd ..
+
+# fitscut
+# using LIBS to make sure libjpeg version 62 is linked
+export CFLAGS=-I${VIRTUAL_ENV}/include
+export LDFLAGS=-L${VIRTUAL_ENV}/lib
+test ! -e master.zip && wget https://github.com/spacetelescope/fitscut/archive/master.zip
+unzip -o master.zip
+cd fitscut-master
+./configure --prefix=$VIRTUAL_ENV && make && make install
+
+popd

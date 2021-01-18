@@ -1,0 +1,77 @@
+openapi: 3.0.0
+servers:
+  - url: http://localhost:5004/
+info:
+  title: SBN Survey Image Service (Working Draft)
+  version: "0.1.0-dev"
+  description: API for serving images, cutouts, and data labels from survey data provided by the NASA Planetary Data System Small Bodies Node.
+paths:
+  /getImage:
+    get:
+      tags:
+        - Survey images and labels
+      summary: Get survey image (full-size or sub-frame) or label corresponding to the requested image ID.  Image data may be returned in FITS, JPEG, or PNG formats.
+      operationId: sbn_survey_image_service.api.app.get_image
+      parameters:
+        - name: id
+          in: query
+          description: Unique image data product ID (PDS3) or local identifier (PDS4)
+          example: P20021023_OBSDATA_20021023113833A
+          required: true
+          allowEmptyValue: false
+          schema:
+            type: string
+        - name: format
+          in: query
+          description: Image format, or "label" to return the PDS label for the original image.
+          required: false
+          allowEmptyValue: false
+          schema:
+            type: string
+            enum: [fits, jpeg, png, label]
+        - name: ra
+          in: query
+          description: Cutout image center Right Ascension (J2000) in degrees.
+          required: false
+          allowEmptyValue: false
+          schema:
+            type: float
+            minimum: 0
+            maximum: 360
+        - name: dec
+          in: query
+          description: Cutout image center Declination (J2000) in degrees.
+          required: false
+          allowEmptyValue: false
+          schema:
+            type: float
+            minimum: -90
+            maximum: 90
+        - name: size
+          in: query
+          description: 'Cutout image size, including units. Allowed units: arcsec, arcmin, deg, degree, rad, or radian.'
+          example: 5arcmin
+          required: false
+          allowEmptyValue: false
+          schema:
+            type: string
+            pattern: '^\d(\.\d*)?(arcsec|arcmin|deg|degree|rad|radian)$'
+      responses:
+        "200":
+          description: Data product (full-size or sub-frame) or label.
+          content:
+            text/plain:
+              schema:
+                type: string
+            image/fits:
+              schema:
+                type: string
+                format: binary
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+            image/png:
+              schema:
+                type: string
+                format: binary

@@ -1,0 +1,4 @@
+### Optional dependency for postgresql backed databases
+psycopg2-binary==2.8.6
+### Most requirements are specified in setup.py, but PDS3 is not on pypi, so...
+https://github.com/mkelley/pds3/archive/v0.2.2.tar.gz#egg=pds3

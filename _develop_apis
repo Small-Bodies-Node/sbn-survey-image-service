@@ -1,0 +1,17 @@
+#! /bin/bash
+
+clear
+
+echo """
+==============================================
+    Running flask API in development mode.
+
+    API will be refreshed on code changes.
+
+    Logging is to console.
+==============================================
+"""
+
+sleep 2
+
+nodemon -w 'sbn_survye_image_service/**' -e py,yaml --exec python3 -m sbn_survey_image_service.api.app
