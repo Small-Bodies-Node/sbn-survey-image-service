@@ -32,19 +32,21 @@ paths:
         - name: ra
           in: query
           description: Cutout image center Right Ascension (J2000) in degrees.
+          example: 47.4495603
           required: false
           allowEmptyValue: false
           schema:
-            type: float
+            type: number
             minimum: 0
             maximum: 360
         - name: dec
           in: query
           description: Cutout image center Declination (J2000) in degrees.
+          example: 32.9424075
           required: false
           allowEmptyValue: false
           schema:
-            type: float
+            type: number
             minimum: -90
             maximum: 90
         - name: size
