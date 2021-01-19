@@ -15,7 +15,7 @@ from pds3 import PDS3Label
 
 from .database_provider import data_provider_session, Session
 from ..data import valid_pds3_label
-from ..models import Image
+from ..models.image import Image
 from ..exceptions import BadPixelScale, InvalidImageID, InvalidPDS3Label, InvalidPDS4Label
 from ..env import ENV
 
@@ -66,7 +66,7 @@ def pds4_pixel_scale(filename: str) -> float:
     return 0
 
 
-def image_query(image_id: str, ra: Optional[float] = None,
+def image_query(obs_id: str, ra: Optional[float] = None,
                 dec: Optional[float] = None, size: Optional[str] = None,
                 format: str = 'fits') -> str:
     """Query database for image file or cutout thereof.
@@ -74,8 +74,8 @@ def image_query(image_id: str, ra: Optional[float] = None,
 
     Parameters
     ----------
-    image_id : str
-        PDS3 product ID or PDS4 local identifier (LID).
+    obs_id : str
+        PDS3 product ID or PDS4 logical identifier (LID).
 
     ra, dec : float, optional
         Extract sub-frame around this position: J2000 right ascension and
@@ -104,7 +104,7 @@ def image_query(image_id: str, ra: Optional[float] = None,
         exc: Exception
         try:
             im: Image = session.query(Image).filter(
-                Image.image_id == image_id).one()
+                Image.obs_id == obs_id).one()
         except NoResultFound as exc:
             raise InvalidImageID from exc
 

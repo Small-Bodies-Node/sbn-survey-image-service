@@ -15,7 +15,7 @@ paths:
       parameters:
         - name: id
           in: query
-          description: Unique image data product ID (PDS3) or local identifier (PDS4)
+          description: Unique image data product ID (PDS3) or logical identifier (PDS4)
           example: P20021023_OBSDATA_20021023113833A
           required: true
           allowEmptyValue: false

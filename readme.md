@@ -24,7 +24,7 @@ The intent is to be compatible with the IVOA's [Simple Image Access protocol](ht
 
 (DRAFT)
 
-- [ ] v0.1, add id, collection, facility, instrument, data product type, calibration level, target, and file paths to database; implement image service for full-frame and sub-frame images, data labels, and conversion to jpeg and png formats.
+- [x] v0.1, add id, collection, facility, instrument, data product type, calibration level, target, and file paths to database; implement image service for full-frame and sub-frame images, data labels, and conversion to jpeg and png formats.
 - [ ] v0.2, search ID, COLLECTION, FACILITY, INSTRUMENT, DPTYPE, FORMAT, MAXREC
 - [ ] v0.2, add spatial and time coordinates (including exposure time) to database; implement spatial index; search POS, TIME, EXPTIME
 - [ ] v0.3, add spatial resolution and field-of-view to database; search by spatial resolution (SPATRES), field-of-view (FOV)
@@ -59,7 +59,7 @@ The following steps are needed to set up the code base for whatever aspect you w
 
 ### Adding archival data
 
-The `sbn_survey_image_service.data.add` sub-module is used to add images to the database.  It scans PDS3 or PDS4 labels, and saves data product metadata, path to the label, and path to the image data to the database, indexed by the product ID (PDS3) or local identifier (PDS4).  The sub-module may be run as a command-line script `python3 -m sbn_survey_image_service.data.add`.  The script will automatically create the database in case it does not exist.  For example, to search a NEAT survey directory for PDS3 image labels and data:
+The `sbn_survey_image_service.data.add` sub-module is used to add images to the database.  It scans PDS3 or PDS4 labels, and saves data product metadata, path to the label, and path to the image data to the database, indexed by the product ID (PDS3) or logical identifier (PDS4).  The sub-module may be run as a command-line script `python3 -m sbn_survey_image_service.data.add`.  The script will automatically create the database in case it does not exist.  For example, to search a NEAT survey directory for PDS3 image labels and data:
 ```
 python3 -m sbn_survey_image_service.data.add /path/to/archives/neat/tricam/data/p20020718/obsdata
 ```

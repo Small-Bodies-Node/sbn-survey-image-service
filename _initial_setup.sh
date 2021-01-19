@@ -37,7 +37,7 @@ source ./.venv/bin/activate
 pip install --upgrade -q -q -q pip setuptools wheel
 pip install -q -r requirements.vscode.txt
 pip install -q -r requirements.txt
-pip install --process-dependency-links -e .
+pip install -e .
 
 if [[ ! -e $VIRTUAL_ENV/bin/fitscut ]]; then
     echo -e """${BLU}

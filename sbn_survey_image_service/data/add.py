@@ -8,20 +8,21 @@ May be run as a command-line script via python3 -m sbn_survey_image_service.data
 import os
 import logging
 import argparse
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from sqlalchemy.orm.session import Session
 from pds3 import PDS3Label
 import pds4_tools
 
-
 from ..exceptions import InvalidLabel, InvalidPDS3Label, InvalidPDS4Label, InvalidImagePath
 from ..data import valid_pds3_label
 from ..services.database_provider import data_provider_session, db_engine
-from ..models import Image, Base
+from ..models import Base
+from ..models.image import Image
 
 
-def add_label(label_path: str, session: Session) -> bool:
+def add_label(label_path: str, session: Session,
+              **kwargs: Dict[str, str]) -> bool:
     """Add label and image data to database.
 
 
@@ -32,6 +33,9 @@ def add_label(label_path: str, session: Session) -> bool:
 
     session : sqlalchemy Session
         Database session object.
+
+    **kwargs :
+        Use these values instead of anything from the label.
 
 
     Returns
@@ -44,54 +48,58 @@ def add_label(label_path: str, session: Session) -> bool:
 
     exc: Exception
     try:
-        image_id: str
-        image_path: str
         if valid_pds3_label(label_path):
-            image_id, image_path = pds3_image(label_path)
+            im = pds3_image(label_path, **kwargs)
         else:
-            image_id, image_path = pds4_image(label_path)
+            im = pds4_image(label_path, **kwargs)
     except (InvalidLabel, InvalidImagePath) as exc:
         logger.error(exc)
         return False
 
     # add to database
-    session.add(
-        Image(
-            image_id=image_id,
-            image_path=image_path,
-            label_path=label_path
-        )
-    )
+    session.add(im)
 
     logger.error('Adding %s', label_path)
     return True
 
 
-def pds3_image(label_path: str) -> Tuple[str, str]:
-    """Examine PDS3 label for image data product ID and file name.
+def pds3_image(label_path: str, **kwargs: Dict[str, str]) -> Image:
+    """Examine PDS3 label for image meta data and file name.
 
     When adding a new PDS3-labeled survey to the service, edit this
     function so that it returns the correct image path.
+
 
     Parameters
     ----------
     label_path : str
         Path to the data label.
 
+    **kwargs :
+        Use these values instead of anything from the label.  Allowed
+        keys: facility
+
+
     Returns
     -------
-    image_id : str
-        Unique image identifier (PDS3 Product ID).
-
-    image_path : str
-        Full path to the image file.
+    im : Image
 
     """
 
+    exc: Exception
     try:
         label: PDS3Label = PDS3Label(label_path)
-    except:
-        raise InvalidPDS3Label(f'Error reading {label_path}')
+    except Exception as exc:
+        raise InvalidPDS3Label(f'Error reading {label_path}.') from exc
+
+    im: Image = Image(
+        obs_id=label['PRODUCT_ID'],
+        collection=label['DATA_SET_ID'],
+        facility=kwargs.get('facility', label['INSTRUMENT_HOST_NAME']),
+        instrument=label['INSTRUMENT_NAME'],
+        target=label['TARGET_NAME'],
+        label_path=label_path
+    )
 
     pointer: str
     if label['PRODUCT_NAME'] == "NEAT TRI-CAM IMAGE":
@@ -99,20 +107,20 @@ def pds3_image(label_path: str) -> Tuple[str, str]:
     else:
         pointer = '^IMAGE'
 
-    image_path: str = os.path.join(
+    im.image_path = os.path.join(
         os.path.dirname(label_path), label[pointer][0].lower())
 
-    if not os.path.exists(image_path):
+    if not os.path.exists(im.image_path):
         # some of our archive is compressed
-        image_path += '.fz'
+        im.image_path += '.fz'
 
-    if not os.path.exists(image_path):
+    if not os.path.exists(im.image_path):
         raise InvalidImagePath(f'Could not find image in {label_path}.')
 
-    return label['PRODUCT_ID'], image_path
+    return im
 
 
-def pds4_image(label_path: str) -> Tuple[str, str]:
+def pds4_image(label_path: str, **kwargs: Dict[str, str]) -> Image:
     """Examine PDS3 label for image data product ID and file name.
 
     When adding a new PDS4-labeled survey to the service, edit this
@@ -124,7 +132,8 @@ def pds4_image(label_path: str) -> Tuple[str, str]:
 
 
 def add_directory(path: str, session: Session, recursive: bool = False,
-                  extensions: Optional[List[str]] = None) -> None:
+                  extensions: Optional[List[str]] = None,
+                  **kwargs: Dict[str, str]) -> None:
     """Search directory for labels and add to database.
 
 
@@ -142,6 +151,9 @@ def add_directory(path: str, session: Session, recursive: bool = False,
     extensions : list of strings, optional
         Files with these extensions are consdiered PDS labels.  Default:
         .lbl, .xml.
+
+    **kwargs :
+        Use these values instead of anything from the label.
 
     """
 
@@ -161,7 +173,8 @@ def add_directory(path: str, session: Session, recursive: bool = False,
         for filename in filenames:
             if os.path.splitext(filename)[1].lower() in extensions:
                 n_files += 1
-                n_added += add_label(os.path.join(dirpath, filename), session)
+                n_added += add_label(os.path.join(dirpath,
+                                                  filename), session, **kwargs)
 
         if not recursive:
             break
@@ -184,6 +197,7 @@ def _parse_args() -> argparse.Namespace:
                               ' while searching directories'))
     parser.add_argument('--no-create', dest='create', action='store_false',
                         help='do not attempt to create missing database tables')
+    parser.add_argument('--facility', help='use this facility name')
     return parser.parse_args()
 
 
@@ -197,9 +211,10 @@ def _main() -> None:
 
         for ld in args.labels_or_directories:
             if os.path.isdir(ld):
-                add_directory(ld, session, recursive=args.r, extensions=args.e)
+                add_directory(ld, session, recursive=args.r, extensions=args.e,
+                              facility=args.facility)
             else:
-                add_label(ld, session)
+                add_label(ld, session, facility=args.facility)
 
 
 if __name__ == '__main__':
