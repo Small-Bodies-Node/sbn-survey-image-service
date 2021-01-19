@@ -14,4 +14,4 @@ echo """
 
 sleep 2
 
-nodemon -w 'sbn_survye_image_service/**' -e py,yaml --exec python3 -m sbn_survey_image_service.api.app
+nodemon -w 'sbn_survey_image_service/**' -e py,yaml --exec python3 -m sbn_survey_image_service.api.app
