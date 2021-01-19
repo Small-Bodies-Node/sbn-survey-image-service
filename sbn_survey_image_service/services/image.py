@@ -47,14 +47,14 @@ def pds3_pixel_scale(label_path: str) -> float:
     except:
         raise InvalidPDS3Label(f'Error reading {label_path}.')
 
-    scale: float = sum([
+    scales: List[float] = [
         abs(label['IMAGE'][k].to_value('deg'))
         for k in ['HORIZONTAL_PIXEL_FOV', 'VERTICAL_PIXEL_FOV']
         if k in label['IMAGE']
-    ])
+    ]
+    scale: float = sum(scales) / len(scales)
 
-    if scale <= 0 or scale > 1:
-        print(label_path)
+    if scale <= 0 or scale > 10:
         raise BadPixelScale(scale)
 
     return scale

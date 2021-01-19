@@ -65,9 +65,9 @@ python3 -m sbn_survey_image_service.data.add /path/to/archives/neat/tricam/data/
 ```
 For a summary of command-line parameters, use the `--help` option.
 
-Due to survey-to-survey label differences, it is unlikely that the script will work with a previously untested data source.  Edit the appropriate functions in `sbn_survey_image_service/data/add.py`, either `pds3_image` or `pds4_image`.
+Due to survey-to-survey label differences, it is unlikely that the script will work with a previously untested data source.  Edit the appropriate functions in `sbn_survey_image_service/data/add.py`, either `pds3_image` or `pds4_image`.  Also, review the pixel scale calculations in `sbn_survey_image_service/services/image.py` and verify that the correct value will be calculated.
 
-It is assumed that survey images are FITS-compatible with a World Coordinate System defined for a standard sky reference frame (e.g., J2000).  The cutout service uses the FITS header, not the PDS labels, to define the sub-frame.
+It is assumed that survey images are FITS-compatible with a World Coordinate System defined for a standard sky reference frame (e.g., J2000).  The cutout service uses the FITS header, not the PDS labels, to define the sub-frame.  However, the PDS label is examined for the pixel scale.
 
 ### APIs
 
