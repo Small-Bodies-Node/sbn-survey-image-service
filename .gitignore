@@ -17,3 +17,5 @@ src/**
 
 # local sqlite databases
 *.db
+
+activate
