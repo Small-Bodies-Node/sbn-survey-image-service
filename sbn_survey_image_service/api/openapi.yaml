@@ -1,12 +1,12 @@
 openapi: 3.0.0
 servers:
-  - url: http://localhost:5004/
+  - url: http://localhost:5006/
 info:
   title: SBN Survey Image Service (Working Draft)
   version: "0.1.0-dev"
   description: API for serving images, cutouts, and data labels from survey data provided by the NASA Planetary Data System Small Bodies Node.
 paths:
-  /getImage:
+  /images/{id}:
     get:
       tags:
         - Survey images and labels
@@ -14,7 +14,7 @@ paths:
       operationId: sbn_survey_image_service.api.app.get_image
       parameters:
         - name: id
-          in: query
+          in: path
           description: Unique image data product ID (PDS3) or logical identifier (PDS4)
           example: P20021023_OBSDATA_20021023113833A
           required: true
@@ -58,6 +58,13 @@ paths:
           schema:
             type: string
             pattern: '^\d(\.\d*)?(arcsec|arcmin|deg|degree|rad|radian)$'
+        - name: download
+          in: query
+          description: Prompt for downloading via web browsers (sets HTTP Content-Disposition).
+          example: true
+          allowEmptyValue: false
+          schema:
+            type: boolean
       responses:
         "200":
           description: Data product (full-size or sub-frame) or label.

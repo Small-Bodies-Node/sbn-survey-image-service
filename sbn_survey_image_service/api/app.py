@@ -23,7 +23,8 @@ MIME_TYPES = {
 
 
 def get_image(id: str, ra: Optional[float] = None, dec: Optional[float] = None,
-              size: Optional[str] = None, format: str = 'fits') -> Response:
+              size: Optional[str] = None, format: str = 'fits',
+              download: bool = False) -> Response:
     """Controller for survey image service."""
     filename: str
     if format.lower() == 'label':
@@ -35,14 +36,8 @@ def get_image(id: str, ra: Optional[float] = None, dec: Optional[float] = None,
         os.path.splitext(filename.lower())[1],
         'text/plain')
 
-    #as_attachement: bool = False
-    # attachment_filename: str = ''
-    # if mime_type == 'image/fits':
-    #     as_attachement = True
-    #     attachment_filename = os.path.basename(filename)
-
-    return send_file(filename, mimetype=mime_type)
-    # as_attachment=as_attachement)
+    return send_file(filename, mimetype=mime_type,
+                     as_attachment=download)
 
 
 ###########################################
