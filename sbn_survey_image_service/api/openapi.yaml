@@ -51,7 +51,7 @@ paths:
             maximum: 90
         - name: size
           in: query
-          description: 'Cutout image size, including units. Allowed units: arcsec, arcmin, deg, degree, rad, or radian.'
+          description: 'Cutout image size, including units. Allowed units: arcsec, arcmin, deg, degree, rad, or radian.  Maximum size is 1024 pixels.'
           example: 5arcmin
           required: false
           allowEmptyValue: false
