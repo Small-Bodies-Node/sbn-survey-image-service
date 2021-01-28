@@ -25,6 +25,7 @@ FORMATS = {
     'jpeg': '--jpg'
 }
 
+# if this is updated, change the API documentation for `size`
 MAXIMUM_CUTOUT_SIZE = 1024
 
 # make cutout cache directory, as needed
