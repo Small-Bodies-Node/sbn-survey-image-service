@@ -28,16 +28,18 @@ def get_image(id: str, ra: Optional[float] = None, dec: Optional[float] = None,
     """Controller for survey image service."""
     filename: str
     if format.lower() == 'label':
-        filename = label_query(id)
+        filename, attachment_filename = label_query(id)
     else:
-        filename = image_query(id, ra=ra, dec=dec, size=size, format=format)
+        filename, attachment_filename = image_query(
+            id, ra=ra, dec=dec, size=size, format=format)
 
     mime_type: str = MIME_TYPES.get(
-        os.path.splitext(filename.lower())[1],
+        os.path.splitext(attachment_filename.lower())[1],
         'text/plain')
 
     return send_file(filename, mimetype=mime_type,
-                     as_attachment=download)
+                     as_attachment=download,
+                     attachment_filename=attachment_filename)
 
 
 ###########################################

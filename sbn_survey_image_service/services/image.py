@@ -6,6 +6,7 @@ __all__ = [
 ]
 
 import os
+from tempfile import mkstemp
 from typing import List, Optional
 from subprocess import check_output
 
@@ -94,6 +95,9 @@ def image_query(obs_id: str, ra: Optional[float] = None,
     image_path : str
         Path to requested image.
 
+    attachment_filename : str
+        Suggested filename for downloads.
+
     """
 
     if format not in ['fits', 'png', 'jpeg']:
@@ -121,8 +125,8 @@ def image_query(obs_id: str, ra: Optional[float] = None,
     suffix: str = ''
     if (ra is None) or (dec is None) or (size is None):
         if format == 'fits':
-            # were done
-            return str(im.image_path)
+            # we're done
+            return str(im.image_path), os.path.basename(im.image_path)
 
         # otherwise return full-frame jpeg or png
         cmd.append('--all')
@@ -151,13 +155,21 @@ def image_query(obs_id: str, ra: Optional[float] = None,
             f'-r {size_pix}',
         ])
 
-        # file name is based on coordinates and size
-        suffix = f'_{+ra:.5f}{+dec:.5f}_{size_deg:.6f}deg'
+        # attachment file name is based on coordinates and size
+        suffix = f'_{+ra:.5f}{+dec:.5f}_{size.replace(" ", "")}'
 
-    outfile: str = f'{im.image_path}{suffix}.{format}'
-    cmd.extend([im.image_path, outfile])
+    # create attachment file name
+    attachment_filename: str = os.path.splitext(
+        os.path.basename(im.image_path)
+    )[0]
+    attachment_filename += f'{suffix}.{format}'
+
+    # create a unique temporary file
+    fd: int
+    image_path: str
+    fd, image_path = mkstemp(suffix=f'.{format}', dir=ENV.SBNSIS_CUTOUT_CACHE)
+    os.close(fd)  # the file is created, let fitscut overwrite it
+    cmd.extend([im.image_path, image_path])
     check_output(cmd)
 
-    image_path: str = os.path.join(ENV.SBNSIS_CUTOUT_CACHE, outfile)
-
-    return image_path
+    return image_path, attachment_filename

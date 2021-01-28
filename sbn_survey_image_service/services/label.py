@@ -5,6 +5,7 @@ __all__ = [
     'label_query'
 ]
 
+import os
 from sqlalchemy.orm.exc import NoResultFound
 from .database_provider import data_provider_session, Session
 from ..models.image import Image
@@ -17,9 +18,12 @@ def label_query(obs_id: str) -> str:
     with data_provider_session() as session:
         exc: Exception
         try:
-            q: str = session.query(Image.label_path).filter(
-                Image.obs_id == obs_id).one()[0]
+            label_path: str = (
+                session.query(Image.label_path)
+                .filter(Image.obs_id == obs_id)
+                .one()[0]
+            )
         except NoResultFound as exc:
             raise InvalidImageID from exc
 
-    return q
+    return label_path, os.path.basename(label_path)
