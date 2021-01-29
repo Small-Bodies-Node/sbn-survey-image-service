@@ -91,11 +91,12 @@ def create_data(session, path):
         np.sqrt(4 * np.pi / len(centers))
     ) / image_size
     xy: np.ndarray = np.mgrid[:image_size, :image_size][::-1]
+    xy[1] = xy[1, ::-1]  # North up
 
     w: WCS = WCS()
     w.wcs.ctype = 'RA---TAN', 'DEC--TAN'
     w.wcs.crpix = image_size // 2, image_size // 2
-    w.wcs.pc = [[pixel_size, 0], [0, -pixel_size]]
+    w.wcs.pc = [[-pixel_size, 0], [0, pixel_size]]
 
     observation_number: int = 0
 
