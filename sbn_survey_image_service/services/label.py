@@ -6,13 +6,16 @@ __all__ = [
 ]
 
 import os
+from typing import Tuple
+
 from sqlalchemy.orm.exc import NoResultFound
+
 from .database_provider import data_provider_session, Session
 from ..models.image import Image
 from ..exceptions import InvalidImageID
 
 
-def label_query(obs_id: str) -> str:
+def label_query(obs_id: str) -> Tuple[str, str]:
     """Query database for data product label file name."""
     session: Session
     with data_provider_session() as session:

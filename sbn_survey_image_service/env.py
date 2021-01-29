@@ -11,8 +11,10 @@ class ENV():
     """ Class to store all env variables used in app """
 
     # String properties
+    TEST_DATA_PATH: str = os.path.abspath(str(
+        os.getenv("TEST_DATA_PATH", "./data/test")))
     DB_HOST: str = str(os.getenv("DB_HOST", ""))
-    DB_DIALECT: str = str(os.getenv("DB_DIALECT", "sqilte"))
+    DB_DIALECT: str = str(os.getenv("DB_DIALECT", "sqlite"))
     DB_USERNAME: str = str(os.getenv("DB_USERNAME", ""))
     DB_PASSWORD: str = str(os.getenv("DB_PASSWORD", ""))
     DB_DATABASE: str = str(os.getenv("DB_DATABASE", "default.db"))

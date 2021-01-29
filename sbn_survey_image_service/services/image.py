@@ -7,7 +7,7 @@ __all__ = [
 
 import os
 from tempfile import mkstemp
-from typing import List, Optional
+from typing import List, Optional, Tuple
 from subprocess import check_output
 
 from sqlalchemy.orm.exc import NoResultFound
@@ -70,7 +70,7 @@ def pds4_pixel_scale(filename: str) -> float:
 
 def image_query(obs_id: str, ra: Optional[float] = None,
                 dec: Optional[float] = None, size: Optional[str] = None,
-                format: str = 'fits') -> str:
+                format: str = 'fits') -> Tuple[str, str]:
     """Query database for image file or cutout thereof.
 
 
