@@ -14,6 +14,7 @@ _temp
 **.egg-info
 build/**
 src/**
+data/**
 
 # local sqlite databases
 *.db

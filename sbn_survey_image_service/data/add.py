@@ -203,6 +203,7 @@ def _parse_args() -> argparse.Namespace:
 
 def _main() -> None:
     args: argparse.Namespace = _parse_args()
+    logging.basicConfig(level=logging.INFO)
 
     session: Session
     with data_provider_session() as session:
