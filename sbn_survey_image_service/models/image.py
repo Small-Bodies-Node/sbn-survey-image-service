@@ -95,7 +95,7 @@ class Image(Base):
     """
 
     def __repr__(self) -> str:
-        return f"Image(product_id='{self.obs_id}', image_path='{self.image_path}', label_path='{self.label_path}')"
+        return f"Image(obs_id='{self.obs_id}', image_path='{self.image_path}', label_path='{self.label_path}')"
 
     def __str__(self) -> str:
         return f"<Class Image: {self.obs_id}>"

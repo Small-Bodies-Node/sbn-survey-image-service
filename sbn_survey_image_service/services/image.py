@@ -25,9 +25,6 @@ FORMATS = {
     'jpeg': '--jpg'
 }
 
-# if this is updated, change the API documentation for `size`
-MAXIMUM_CUTOUT_SIZE = 1024
-
 # make cutout cache directory, as needed
 os.system(f'mkdir -p {ENV.SBNSIS_CUTOUT_CACHE}')
 
@@ -140,12 +137,12 @@ def image_query(obs_id: str, ra: Optional[float] = None,
         # Dec -90 to 90
         dec = min(max(dec, -90), 90)
 
-        # cutout size 1 to MAXIMUM_CUTOUT_SIZE
+        # cutout size 1 to ENV.MAXIMUM_CUTOUT_SIZE
         pixel_scale: float = get_pixel_scale(im)
         size_deg: float = u.Quantity(size).to_value('deg')
         size_pix: int = int(min(
             max(float(size_deg) / pixel_scale, 1),
-            MAXIMUM_CUTOUT_SIZE
+            ENV.MAXIMUM_CUTOUT_SIZE
         ))
 
         cmd.extend([

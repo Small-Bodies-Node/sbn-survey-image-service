@@ -55,6 +55,11 @@ The following steps are needed to set up the code base for whatever aspect you w
   - Create/activate a python virtual environment
   - Install dependencies to virtual env
   - Make available to your shell the variables `.env`
+- Optionally test your set up:
+  - `bash _tests`.  If the test dataset does not exist, then this will take a few minutes.
+  - When the test data is no longer needed:
+    - Delete test data set from database: `python3 -m sbn_survey_image_service.data.test.generate --delete`
+    - Files in `data/test` must be removed manually.
 - Create the database and add data to the archive (see below).
 
 ### Adding archival data

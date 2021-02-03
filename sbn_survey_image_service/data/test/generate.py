@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Create a test data set and add to database.
 
-May be run as a command-line script via python3 -m sbn_survey_image_service.data.test
+May be run as a command-line script via python3 -m sbn_survey_image_service.data.test.generate
 
 """
 
@@ -19,10 +19,10 @@ from astropy.coordinates import SkyCoord, Angle
 from astropy.io import fits
 from astropy.wcs import WCS
 
-from ..services.database_provider import data_provider_session, db_engine
-from ..models import Base
-from ..models.image import Image
-from ..env import ENV
+from ...services.database_provider import data_provider_session, db_engine
+from ...models import Base
+from ...models.image import Image
+from ...env import ENV
 
 
 def spherical_distribution(N: int) -> np.ndarray:
@@ -120,7 +120,6 @@ def create_data(session, path):
 
             outf: io.IOBase
             with open(label_path, 'w') as outf:
-
                 outf.write(f'''PDS_VERSION_ID                     = PDS3                                     \r
 COMMENT                            = "Dummy label"                            \r
 OBJECT                             = IMAGE                                    \r
