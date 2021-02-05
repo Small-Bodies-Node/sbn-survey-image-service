@@ -42,7 +42,7 @@ class Image(Base):
         Observing facility name.
         
         PDS3: e.g., INSTRUMENT_HOST_NAME
-        PDS4: e.g., Observing_System/Observing_System_Component/name
+        PDS4: e.g., Observing_System/Observing_System_Component[type='Observatory']/name
         IVOA ObsCore: facility_name
     """
 
@@ -51,7 +51,7 @@ class Image(Base):
         Observing instrument name.
 
         PDS3: INSTRUMENT_NAME
-        PDS4: e.g., Observing_System/Observing_System_Component/name
+        PDS4: e.g., Observing_System/Observing_System_Component[type='Instrument']/name
         IVOA ObsCore: instrument_name
     """
 
@@ -71,7 +71,7 @@ class Image(Base):
         Data calibration level.
 
         PDS3: ?
-        PDS4: ?
+        PDS4: Primary_Result_Summary/processing_level
         IVOA ObsCore: calib_level
     """
 
@@ -84,18 +84,18 @@ class Image(Base):
         IVOA ObsCore: target_name
     """
 
-    image_path: str = Column(String, nullable=True)
+    image_url: str = Column(String, nullable=True)
     """
-        The local path to the data product.
+        URL to the data product.
     """
 
-    label_path: str = Column(String, nullable=True)
+    label_url: str = Column(String, nullable=True)
     """
-        The local path to the data product label.
+        URL to the data product label.
     """
 
     def __repr__(self) -> str:
-        return f"Image(obs_id='{self.obs_id}', image_path='{self.image_path}', label_path='{self.label_path}')"
+        return f"Image(obs_id='{self.obs_id}', image_url='{self.image_url}', label_url='{self.label_url}')"
 
     def __str__(self) -> str:
         return f"<Class Image: {self.obs_id}>"

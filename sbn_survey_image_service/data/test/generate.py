@@ -7,6 +7,7 @@ May be run as a command-line script via python3 -m sbn_survey_image_service.data
 
 import os
 import io
+from sbn_survey_image_service.data.core import url_to_local_file
 import sys
 import logging
 import argparse
@@ -14,6 +15,7 @@ from typing import Any, List, Tuple
 
 import numpy as np
 from sqlalchemy.orm.session import Session
+from sqlalchemy.exc import OperationalError
 
 from astropy.coordinates import SkyCoord, Angle
 from astropy.io import fits
@@ -68,7 +70,7 @@ def spherical_distribution(N: int) -> np.ndarray:
 
 
 def create_data(session, path):
-    """Create a test data set that covers the sky.
+    """Create a test data set that partially covers the sky.
 
     Two sets of files are created, one with each pixel set to the RA value,
     the other with Declination.
@@ -84,14 +86,13 @@ def create_data(session, path):
     # N = int(4 * np.pi / ((3600 / 206265)**2))
     # N = 41253
 
-    logger.info('Creating ~8000 images and labels.')
-    centers: np.ndarray = np.degrees(spherical_distribution(4000))
+    logger.info('Creating ~1600 images and labels.')
+    centers: np.ndarray = np.degrees(spherical_distribution(400))
     image_size: int = 300
     pixel_size: float = np.degrees(
         np.sqrt(4 * np.pi / len(centers))
-    ) / image_size
+    ) / image_size / 10
     xy: np.ndarray = np.mgrid[:image_size, :image_size][::-1]
-    xy[1] = xy[1, ::-1]  # North up
 
     w: WCS = WCS()
     w.wcs.ctype = 'RA---TAN', 'DEC--TAN'
@@ -125,7 +126,7 @@ COMMENT                            = "Dummy label"                            \r
 OBJECT                             = IMAGE                                    \r
   HORIZONTAL_PIXEL_FOV             = {pixel_size:.6f} <DEGREE>                        \r
   VERTICAL_PIXEL_FOV               = {pixel_size:.6f} <DEGREE>                        \r
-END_OBJECT                         = IMAGE                                    \r                                                                              
+END_OBJECT                         = IMAGE                                    \r
 END                                                                           ''')
 
             im: Image = Image(
@@ -134,8 +135,8 @@ END                                                                           ''
                 facility='test-facility',
                 instrument='test-instrument',
                 target='test-sky',
-                label_path=label_path,
-                image_path=image_path
+                label_url='file://' + label_path,
+                image_url='file://' + image_path
             )
             session.add(im)
 
@@ -146,6 +147,11 @@ END                                                                           ''
         'Created and added %d test images and their labels to the database.',
         observation_number
     )
+
+
+def create_tables() -> None:
+    """Create data tables, as needed."""
+    Base.metadata.create_all(db_engine)
 
 
 def delete_data(session) -> None:
@@ -165,18 +171,22 @@ def exists(session) -> bool:
 
     """
 
-    results: Any = (
-        session.query(Image)
-        .filter(Image.collection == 'test-collection')
-        .all()
-    )
+    try:
+        results: Any = (
+            session.query(Image)
+            .filter(Image.collection == 'test-collection')
+            .all()
+        )
+    except OperationalError:
+        return False
 
     if len(results) == 0:
         return False
 
     im: Image
     for im in results:
-        if not any((os.path.exists(im.image_path), os.path.exists(im.label_path))):
+        if not any((os.path.exists(url_to_local_file(im.image_url)),
+                    os.path.exists(url_to_local_file(im.label_url)))):
             return False
 
     return True
@@ -214,7 +224,7 @@ def _main() -> None:
     session: Session
     with data_provider_session() as session:
         if args.no_create_tables is False:
-            Base.metadata.create_all(db_engine)
+            create_tables()
 
         if args.add:
             create_data(session, args.path)

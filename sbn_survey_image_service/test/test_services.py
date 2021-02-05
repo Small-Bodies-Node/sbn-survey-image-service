@@ -20,14 +20,15 @@ def dummy_data():
     session: Session
     with data_provider_session() as session:
         if not generate.exists(session):
+            generate.create_tables()
             generate.create_data(session, ENV.TEST_DATA_PATH)
 
 
 def test_label_query():
-    image_path: str
+    image_url: str
     attachment_filename: str
-    image_path, attachment_filename = label_query('test-000023-ra')
-    assert image_path == os.path.join(
+    image_url, attachment_filename = label_query('test-000023-ra')
+    assert image_url == os.path.join(
         ENV.TEST_DATA_PATH, 'test-000023-ra.lbl')
 
 
@@ -37,63 +38,63 @@ def test_label_query_fail():
 
 
 def test_image_query_full_frame_fits():
-    image_path: str
+    image_url: str
     attachment_filename: str
-    image_path, attachment_filename = image_query(
+    image_url, attachment_filename = image_query(
         'test-000023-ra', format='fits')
 
     # should return path to original file
-    assert image_path == os.path.join(
+    assert image_url == os.path.join(
         ENV.TEST_DATA_PATH, 'test-000023-ra.fits')
     assert attachment_filename == 'test-000023-ra.fits'
 
 
 def test_image_query_full_frame_jpg():
-    image_path: str
+    image_url: str
     attachment_filename: str
-    image_path, attachment_filename = image_query(
+    image_url, attachment_filename = image_query(
         'test-000023-ra', format='jpeg')
 
     # should return jpg file in cache directory
-    assert os.path.dirname(image_path) == os.path.abspath(
+    assert os.path.dirname(image_url) == os.path.abspath(
         ENV.SBNSIS_CUTOUT_CACHE)
-    assert os.path.splitext(image_path)[1] == '.jpeg'
+    assert os.path.splitext(image_url)[1] == '.jpeg'
     assert attachment_filename == 'test-000023-ra.jpeg'
 
 
 def test_image_query_full_frame_png():
-    image_path: str
+    image_url: str
     attachment_filename: str
-    image_path, attachment_filename = image_query(
+    image_url, attachment_filename = image_query(
         'test-000023-ra', format='png')
 
     # should return png file in cache directory
-    assert os.path.dirname(image_path) == os.path.abspath(
+    assert os.path.dirname(image_url) == os.path.abspath(
         ENV.SBNSIS_CUTOUT_CACHE)
-    assert os.path.splitext(image_path)[1] == '.png'
+    assert os.path.splitext(image_url)[1] == '.png'
     assert attachment_filename == 'test-000023-ra.png'
 
 
 def test_image_query_cutout():
-    ra: float = 0.0
-    dec: float = -75.25
+    ra: float = 43.2
+    dec: float = -45.0
     size: str = '1deg'
 
-    image_path: str
+    image_url: str
     attachment_filename: str
-    image_path, attachment_filename = image_query(
+    image_url, attachment_filename = image_query(
         'test-000102-dec', ra=ra, dec=dec, size=size,
         format='fits')
 
     # should return fits file in cache directory
-    assert os.path.dirname(image_path) == os.path.abspath(
+    assert os.path.dirname(image_url) == os.path.abspath(
         ENV.SBNSIS_CUTOUT_CACHE)
-    assert os.path.splitext(image_path)[1] == '.fits'
+    assert os.path.splitext(image_url)[1] == '.fits'
     assert attachment_filename == f'test-000102-dec_{+ra:.5f}{+dec:.5f}_{size.replace(" ", "")}.fits'
 
-    # inspect file, value should be -75 at the center
-    im: np.ndarray = fits.getdata(image_path)
-    assert im[im.shape[0] // 2, im.shape[1] // 2] == -75
+    # inspect file, value should be -45 at the center
+    im: np.ndarray = fits.getdata(image_url)
+    assert im[im.shape[0] // 2, im.shape[1] // 2] == -45
 
 
 def test_image_query_obs_id_fail():

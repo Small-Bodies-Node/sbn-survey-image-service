@@ -1,4 +1,7 @@
 #! /bin/bash
 
 # Run test scripts
-pytest --verbose tests sbn_survey_image_service --cov=sbn_survey_image_service --cov-report=html
+pytest --verbose tests sbn_survey_image_service \
+  --cov=sbn_survey_image_service \
+  --cov-report=html \
+  --remote-data

@@ -68,6 +68,12 @@ The `sbn_survey_image_service.data.add` sub-module is used to add images to the 
 ```
 python3 -m sbn_survey_image_service.data.add /path/to/archives/neat/tricam/data/p20020718/obsdata
 ```
+
+Data may be served to the image service via HTTP(S).  In this case, the `add` script must still be run on locally accessible files, but an appropriate URL may be formed using the `--base-url` and `--strip-leading` parameters:
+```
+python3 -m sbn_survey_image_service.data.add /path/to/archives/neat/tricam/data/p20020718/obsdata --base-url=https://sbnarchive.psi.edu/pds3/ --strip-leading=/path/to/archives
+```
+
 For a summary of command-line parameters, use the `--help` option.
 
 Due to survey-to-survey label differences, it is unlikely that the script will work with a previously untested data source.  Edit the appropriate functions in `sbn_survey_image_service/data/add.py`, either `pds3_image` or `pds4_image`.  Also, review the pixel scale calculations in `sbn_survey_image_service/services/image.py` and verify that the correct value will be calculated.

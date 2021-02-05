@@ -21,18 +21,33 @@ from ..models import Base
 from ..models.image import Image
 
 
-def add_label(label_path: str, session: Session,
-              **kwargs: Dict[str, str]) -> bool:
+def _remove_prefix(s: str, prefix: str):
+    """If ``s`` starts with ``prefix`` remove it."""
+    if s.startswith(prefix):
+        return s[len(prefix):]
+    else:
+        return s
+
+
+def add_label(label_path: str, session: Session, base_url: str = 'file://',
+              strip_leading: str = '', **kwargs: Dict[str, str]) -> bool:
     """Add label and image data to database.
 
 
     Parameters
     ----------
     label_path : string
-        PDS label file name.
+        Local path to PDS label.
 
     session : sqlalchemy Session
         Database session object.
+
+    base_url : str, optional
+        Prepend the file path with this string to form a URL.  Default is to
+        use file://.
+
+    strip_leading : str, optional
+        Remove this leading string from the path before forming the URL.
 
     **kwargs :
         Use these values instead of anything from the label.
@@ -56,10 +71,18 @@ def add_label(label_path: str, session: Session,
         logger.error(exc)
         return False
 
+    # make proper URLs
+    im.label_url = ''.join((
+        base_url, _remove_prefix(im.label_url, strip_leading)
+    ))
+    im.image_url = ''.join((
+        base_url, _remove_prefix(im.image_url, strip_leading)
+    ))
+
     # add to database
     session.add(im)
 
-    logger.error('Adding %s', label_path)
+    logger.info('Adding %s', label_path)
     return True
 
 
@@ -98,7 +121,7 @@ def pds3_image(label_path: str, **kwargs: Dict[str, str]) -> Image:
         facility=kwargs.get('facility', label['INSTRUMENT_HOST_NAME']),
         instrument=label['INSTRUMENT_NAME'],
         target=label['TARGET_NAME'],
-        label_path=label_path
+        label_url=label_path
     )
 
     pointer: str
@@ -107,20 +130,20 @@ def pds3_image(label_path: str, **kwargs: Dict[str, str]) -> Image:
     else:
         pointer = '^IMAGE'
 
-    im.image_path = os.path.join(
+    im.image_url = os.path.join(
         os.path.dirname(label_path), label[pointer][0].lower())
 
-    if not os.path.exists(im.image_path):
+    if not os.path.exists(im.image_url):
         # some of our archive is compressed
-        im.image_path += '.fz'
+        im.image_url += '.fz'
 
-    if not os.path.exists(im.image_path):
+    if not os.path.exists(im.image_url):
         raise InvalidImagePath(f'Could not find image in {label_path}.')
 
     return im
 
 
-def pds4_image(label_path: str, **kwargs: Dict[str, str]) -> Image:
+def pds4_image(label_url: str, **kwargs: Dict[str, str]) -> Image:
     """Examine PDS3 label for image data product ID and file name.
 
     When adding a new PDS4-labeled survey to the service, edit this
@@ -153,7 +176,7 @@ def add_directory(path: str, session: Session, recursive: bool = False,
         .lbl, .xml.
 
     **kwargs :
-        Use these values instead of anything from the label.
+        Options to pass to `add_label`.
 
     """
 
@@ -198,11 +221,18 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument('--no-create', dest='create', action='store_false',
                         help='do not attempt to create missing database tables')
     parser.add_argument('--facility', help='use this facility name')
+    parser.add_argument('--base-url', default='file://',
+                        help='prepend this string to form a URL')
+    parser.add_argument('--strip-leading', default='',
+                        help='strip this leading string before forming the URL')
     return parser.parse_args()
 
 
 def _main() -> None:
     args: argparse.Namespace = _parse_args()
+    # options to pass on to add_* functions:
+    kwargs = dict(facility=args.facility, base_url=args.base_url,
+                  strip_leading=args.strip_leading.rstrip('/'))
     logging.basicConfig(level=logging.INFO)
 
     session: Session
@@ -212,10 +242,10 @@ def _main() -> None:
 
         for ld in args.labels_or_directories:
             if os.path.isdir(ld):
-                add_directory(ld, session, recursive=args.r, extensions=args.e,
-                              facility=args.facility)
+                add_directory(ld, session, recursive=args.r,
+                              extensions=args.e, **kwargs)
             else:
-                add_label(ld, session, facility=args.facility)
+                add_label(ld, session, **kwargs)
 
 
 if __name__ == '__main__':
