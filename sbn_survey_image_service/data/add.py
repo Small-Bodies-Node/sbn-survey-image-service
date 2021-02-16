@@ -8,11 +8,13 @@ May be run as a command-line script via python3 -m sbn_survey_image_service.data
 import os
 import logging
 import argparse
+from urllib.parse import urlparse, urlunparse, ParseResult
 from typing import Dict, List, Optional, Tuple
 
 from sqlalchemy.orm.session import Session
 from pds3 import PDS3Label
-import pds4_tools
+from pds4_tools import pds4_read
+from pds4_tools.reader.general_objects import StructureList
 
 from ..exceptions import InvalidLabel, InvalidPDS3Label, InvalidPDS4Label, InvalidImagePath
 from ..data import valid_pds3_label
@@ -27,6 +29,12 @@ def _remove_prefix(s: str, prefix: str):
         return s[len(prefix):]
     else:
         return s
+
+
+def _normalize_url(url):
+    """light normalization"""
+    p: ParseResult = urlparse(url)
+    return urlunparse((p.scheme, p.netloc, p.path, p.qs, p.anchor))
 
 
 def add_label(label_path: str, session: Session, base_url: str = 'file://',
@@ -72,12 +80,12 @@ def add_label(label_path: str, session: Session, base_url: str = 'file://',
         return False
 
     # make proper URLs
-    im.label_url = ''.join((
+    im.label_url = _normalize_url(''.join((
         base_url, _remove_prefix(im.label_url, strip_leading)
-    ))
-    im.image_url = ''.join((
+    )))
+    im.image_url = _normalize_url(''.join((
         base_url, _remove_prefix(im.image_url, strip_leading)
-    ))
+    )))
 
     # add to database
     session.add(im)
@@ -143,13 +151,37 @@ def pds3_image(label_path: str, **kwargs: Dict[str, str]) -> Image:
     return im
 
 
-def pds4_image(label_url: str, **kwargs: Dict[str, str]) -> Image:
+def pds4_image(label_path: str, **kwargs: Dict[str, str]) -> Image:
     """Examine PDS3 label for image data product ID and file name.
 
-    When adding a new PDS4-labeled survey to the service, edit this
-    function so that it returns the correct image path.
+    This function may need to be edited when adding a new
+    PDS4-labeled survey to the service.
 
     """
+
+    data: StructureList = pds4_read(label_path, lazy_load=True)
+
+    # return the first file name found
+    image_path: str = os.path.join(
+        os.path.dirname(label_path),
+        data.label.find('File_Area_Observational/File/file_name').text
+    )
+
+    if not os.path.exists(image_path):
+        # some of our archive is compressed
+        image_path += '.fz'
+
+    if not os.path.exists(image_path):
+        raise InvalidImagePath(f'Could not find image at {image_path}.')
+
+    im: Image = Image(
+        obs_id=data.label.find
+        collection=label['DATA_SET_ID'],
+        facility=kwargs.get('facility', label['INSTRUMENT_HOST_NAME']),
+        instrument=label['INSTRUMENT_NAME'],
+        target=label['TARGET_NAME'],
+        label_url=label_path
+    )
 
     raise InvalidPDS4Label()
 
