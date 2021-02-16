@@ -42,7 +42,7 @@ class Image(Base):
         Observing facility name.
         
         PDS3: e.g., INSTRUMENT_HOST_NAME
-        PDS4: e.g., Observing_System/Observing_System_Component[type='Observatory']/name
+        PDS4: e.g., Observing_System/Observing_System_Component/Internal_Reference/[reference_type='is_telescope']/../name
         IVOA ObsCore: facility_name
     """
 
@@ -51,7 +51,7 @@ class Image(Base):
         Observing instrument name.
 
         PDS3: INSTRUMENT_NAME
-        PDS4: e.g., Observing_System/Observing_System_Component[type='Instrument']/name
+        PDS4: e.g., Observing_System/Observing_System_Component/Internal_Reference/[reference_type='is_instrument']/../name
         IVOA ObsCore: instrument_name
     """
 
@@ -66,12 +66,12 @@ class Image(Base):
         IVOA ObsCore: dataproduct_type
     """
 
-    calibration_level: str = Column(String, nullable=True)
+    calibration_level: str = Column(Integer, nullable=True)
     """
         Data calibration level.
 
         PDS3: ?
-        PDS4: Primary_Result_Summary/processing_level
+        PDS4: Observation_Area/Primary_Result_Summary/processing_level
         IVOA ObsCore: calib_level
     """
 

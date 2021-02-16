@@ -12,7 +12,7 @@ from ..data.test import generate
 from ..services import data_provider_session, image_query, label_query
 from ..services.image import pds3_pixel_scale
 from ..env import ENV
-from ..exceptions import BadPixelScale, InvalidImageID, InvalidPDS3Label
+from ..exceptions import BadPixelScale, InvalidImageID, PDS3LabelError
 
 
 @pytest.fixture(autouse=True)
@@ -116,7 +116,7 @@ def test_pds3_pixel_scale_invalid_label():
         outf.write('''\r
 This is not a PDS3 label.\r
 ''')
-    with pytest.raises(InvalidPDS3Label):
+    with pytest.raises(PDS3LabelError):
         pds3_pixel_scale(fn)
 
     os.unlink(fn)

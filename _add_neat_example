@@ -1,0 +1,5 @@
+python3 -m sbn_survey_image_service.data.add -r \
+    /hylonome3/sbnsurveys/source-metadata/gbo.ast.neat.survey/data_geodss/g19960417 \
+    --base-url=https://sbnarchive.psi.edu/pds4/surveys \
+    --strip-leading=/hylonome3/sbnsurveys/source-metadata/
+

@@ -13,6 +13,6 @@ if __name__ == "__main__":
         packages=find_packages(),
         install_requires=['Flask>=1.1.2', 'Flask-Cors>=3.0.10', 'gunicorn==20.0.4',
                           'connexion>=2.7.0', 'swagger-ui-bundle>=0.0.8', 'astropy>=4.2',
-                          'pds4_tools==1.2', 'pds3==0.2.2', 'SQLAlchemy==1.3.5',
+                          'pds4_tools==1.2', 'pds3==0.2.3', 'SQLAlchemy==1.3.5',
                           'python-dotenv==0.14.0', 'pytest-remotedata==0.3.2'],
     )

@@ -14,16 +14,16 @@ class InvalidImagePath(SBNSISException):
     """Image path is invalid."""
 
 
-class InvalidLabel(SBNSISException):
+class LabelError(SBNSISException):
     """File is not a valid PDS label."""
 
 
-class InvalidPDS3Label(InvalidLabel):
-    """File is not a valid PDS3 label."""
+class PDS3LabelError(LabelError):
+    """Error while attempting to read PDS3 label."""
 
 
-class InvalidPDS4Label(InvalidLabel):
-    """File is not a valid PDS4 label."""
+class PDS4LabelError(LabelError):
+    """Error while attempting to read PDS4 label."""
 
 
 class BadPixelScale(SBNSISException):
@@ -32,3 +32,11 @@ class BadPixelScale(SBNSISException):
 
 class ParameterValueError(SBNSISException):
     """Parameter value error."""
+
+
+class SBNSISWarning(SBNSISException):
+    """Warnings."""
+
+
+class InvalidNEATImage(SBNSISWarning):
+    """Invalid NEAT survey image."""

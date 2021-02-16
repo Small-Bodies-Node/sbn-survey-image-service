@@ -8,15 +8,17 @@ May be run as a command-line script via python3 -m sbn_survey_image_service.data
 import os
 import logging
 import argparse
-from urllib.parse import urlparse, urlunparse, ParseResult
-from typing import Dict, List, Optional, Tuple
+from urllib.parse import urlparse, urlunparse
+from typing import Dict, List, Optional
+import xml.etree.ElementTree as ET
 
 from sqlalchemy.orm.session import Session
 from pds3 import PDS3Label
-from pds4_tools import pds4_read
-from pds4_tools.reader.general_objects import StructureList
+#from pds4_tools import pds4_read
+from pds4_tools.reader.read_label import read_label as pds4_read_label
 
-from ..exceptions import InvalidLabel, InvalidPDS3Label, InvalidPDS4Label, InvalidImagePath
+from ..exceptions import (LabelError, InvalidNEATImage, PDS3LabelError,
+                          PDS4LabelError, InvalidImagePath, SBNSISWarning)
 from ..data import valid_pds3_label
 from ..services.database_provider import data_provider_session, db_engine
 from ..models import Base
@@ -32,13 +34,17 @@ def _remove_prefix(s: str, prefix: str):
 
 
 def _normalize_url(url):
-    """light normalization"""
-    p: ParseResult = urlparse(url)
-    return urlunparse((p.scheme, p.netloc, p.path, p.qs, p.anchor))
+    """light normalization?"""
+    return urlunparse(urlparse(url))
+
+
+PDS4CalibrationLevel = {
+    'Calibrated': 2
+}
 
 
 def add_label(label_path: str, session: Session, base_url: str = 'file://',
-              strip_leading: str = '', **kwargs: Dict[str, str]) -> bool:
+              strip_leading: str = '') -> bool:
     """Add label and image data to database.
 
 
@@ -57,9 +63,6 @@ def add_label(label_path: str, session: Session, base_url: str = 'file://',
     strip_leading : str, optional
         Remove this leading string from the path before forming the URL.
 
-    **kwargs :
-        Use these values instead of anything from the label.
-
 
     Returns
     -------
@@ -72,10 +75,13 @@ def add_label(label_path: str, session: Session, base_url: str = 'file://',
     exc: Exception
     try:
         if valid_pds3_label(label_path):
-            im = pds3_image(label_path, **kwargs)
+            im = pds3_image(label_path)
         else:
-            im = pds4_image(label_path, **kwargs)
-    except (InvalidLabel, InvalidImagePath) as exc:
+            im = pds4_image(label_path)
+    except SBNSISWarning as exc:
+        logger.warning(exc)
+        return False
+    except (LabelError, InvalidImagePath) as exc:
         logger.error(exc)
         return False
 
@@ -90,26 +96,21 @@ def add_label(label_path: str, session: Session, base_url: str = 'file://',
     # add to database
     session.add(im)
 
-    logger.info('Adding %s', label_path)
+    logger.debug('Adding %s', label_path)
     return True
 
 
-def pds3_image(label_path: str, **kwargs: Dict[str, str]) -> Image:
+def pds3_image(label_path: str) -> Image:
     """Examine PDS3 label for image meta data and file name.
 
-    When adding a new PDS3-labeled survey to the service, edit this
-    function so that it returns the correct image path.
+    This function may need to be edited when adding a new
+    PDS3-labeled survey to the service.
 
 
     Parameters
     ----------
     label_path : str
         Path to the data label.
-
-    **kwargs :
-        Use these values instead of anything from the label.  Allowed
-        keys: facility
-
 
     Returns
     -------
@@ -121,12 +122,12 @@ def pds3_image(label_path: str, **kwargs: Dict[str, str]) -> Image:
     try:
         label: PDS3Label = PDS3Label(label_path)
     except Exception as exc:
-        raise InvalidPDS3Label(f'Error reading {label_path}.') from exc
+        raise PDS3LabelError(f'Error reading {label_path}.') from exc
 
     im: Image = Image(
         obs_id=label['PRODUCT_ID'],
         collection=label['DATA_SET_ID'],
-        facility=kwargs.get('facility', label['INSTRUMENT_HOST_NAME']),
+        facility=label['INSTRUMENT_HOST_NAME'],
         instrument=label['INSTRUMENT_NAME'],
         target=label['TARGET_NAME'],
         label_url=label_path
@@ -151,39 +152,80 @@ def pds3_image(label_path: str, **kwargs: Dict[str, str]) -> Image:
     return im
 
 
-def pds4_image(label_path: str, **kwargs: Dict[str, str]) -> Image:
+def pds4_image(label_path: str) -> Image:
     """Examine PDS3 label for image data product ID and file name.
 
     This function may need to be edited when adding a new
     PDS4-labeled survey to the service.
 
+
+    Parameters
+    ----------
+    label_path : str
+        Path to the data label.
+
+    Returns
+    -------
+    im : Image
+
     """
 
-    data: StructureList = pds4_read(label_path, lazy_load=True)
+    exc: Exception
+    try:
+        #data: StructureList = pds4_read(label_path, lazy_load=True)
+        label: ET.ElementTree = pds4_read_label(
+            label_path, enforce_default_prefixes=True)
+    except Exception as exc:
+        raise PDS4LabelError(str(exc)) from exc
 
-    # return the first file name found
-    image_path: str = os.path.join(
-        os.path.dirname(label_path),
-        data.label.find('File_Area_Observational/File/file_name').text
-    )
+    try:
+        lid: str = label.find('Identification_Area/logical_identifier').text
+        im: Image = Image(
+            obs_id=lid,
+            collection=lid[:lid.rfind(':')],
+            facility=label.find(
+                "Observation_Area/Observing_System/Observing_System_Component"
+                "/Internal_Reference/[reference_type='is_telescope']/../name")
+            .text.replace('\n', ' '),
+            instrument=label.find(
+                "Observation_Area/Observing_System/Observing_System_Component"
+                "/Internal_Reference/[reference_type='is_instrument']/../name")
+            .text.replace('\n', ' '),
+            target=label.find(
+                "Observation_Area/Target_Identification/name").text,
+            calibration_level=PDS4CalibrationLevel[label.find(
+                'Observation_Area/Primary_Result_Summary/processing_level').text
+            ],
+            label_url=label_path,
+            # return the first file name found
+            image_url=os.path.join(
+                os.path.dirname(label_path),
+                label.find('File_Area_Observational/File/file_name').text
+            )
+        )
+    except AttributeError as exc:
+        # probably not a useful label
+        raise PDS4LabelError(str(exc)) from exc
 
-    if not os.path.exists(image_path):
-        # some of our archive is compressed
-        image_path += '.fz'
+    # is this in a recognized data collection that needs special handling?
+    fz_compressed: bool = False  # some of our archive is compressed
+    if lid.startswith('urn:nasa:pds:gbo.ast.neat.survey'):
+        fz_compressed = True
+        if not valid_neat_image(label):
+            raise InvalidNEATImage(
+                f'{label_path} does not appear to be a NEAT on-sky image.')
 
-    if not os.path.exists(image_path):
-        raise InvalidImagePath(f'Could not find image at {image_path}.')
+    if fz_compressed:
+        im.image_url += '.fz'
 
-    im: Image = Image(
-        obs_id=data.label.find
-        collection=label['DATA_SET_ID'],
-        facility=kwargs.get('facility', label['INSTRUMENT_HOST_NAME']),
-        instrument=label['INSTRUMENT_NAME'],
-        target=label['TARGET_NAME'],
-        label_url=label_path
-    )
+    return im
 
-    raise InvalidPDS4Label()
+
+def valid_neat_image(label: ET.ElementTree) -> bool:
+    """Only ingest NEAT survey on-sky images."""
+
+    title: str = label.find('Identification_Area/title').text
+    return title in ['NEAT TRI-CAM IMAGE', 'NEAT GEODSS IMAGE']
 
 
 def add_directory(path: str, session: Session, recursive: bool = False,
@@ -234,7 +276,7 @@ def add_directory(path: str, session: Session, recursive: bool = False,
         if not recursive:
             break
 
-    logger.info('Searched %d directories, found %d lables, %d successfully added.',
+    logger.info('Searched %d directories, found %d labels, %d successfully added.',
                 n_dirs, n_files, n_added)
 
 
@@ -252,20 +294,22 @@ def _parse_args() -> argparse.Namespace:
                               ' while searching directories'))
     parser.add_argument('--no-create', dest='create', action='store_false',
                         help='do not attempt to create missing database tables')
-    parser.add_argument('--facility', help='use this facility name')
     parser.add_argument('--base-url', default='file://',
                         help='prepend this string to form a URL')
     parser.add_argument('--strip-leading', default='',
                         help='strip this leading string before forming the URL')
+    parser.add_argument('-v', action='store_true', help='verbose logging')
     return parser.parse_args()
 
 
 def _main() -> None:
     args: argparse.Namespace = _parse_args()
     # options to pass on to add_* functions:
-    kwargs = dict(facility=args.facility, base_url=args.base_url,
+    kwargs = dict(base_url=args.base_url,
                   strip_leading=args.strip_leading.rstrip('/'))
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(
+        level=logging.DEBUG if args.v else logging.INFO
+    )
 
     session: Session
     with data_provider_session() as session:

@@ -18,7 +18,7 @@ from pds3 import PDS3Label
 from .database_provider import data_provider_session, Session
 from ..data import valid_pds3_label, url_to_local_file
 from ..models.image import Image
-from ..exceptions import BadPixelScale, InvalidImageID, InvalidPDS3Label, InvalidPDS4Label
+from ..exceptions import BadPixelScale, InvalidImageID, PDS3LabelError, PDS4LabelError
 from ..env import ENV
 
 FORMATS = {
@@ -45,7 +45,7 @@ def pds3_pixel_scale(label_path: str) -> float:
     try:
         label: PDS3Label = PDS3Label(label_path)
     except:
-        raise InvalidPDS3Label(f'Error reading {label_path}.')
+        raise PDS3LabelError(f'Error reading {label_path}.')
 
     scales: List[float] = [
         abs(label['IMAGE'][k].to_value('deg'))
@@ -62,7 +62,7 @@ def pds3_pixel_scale(label_path: str) -> float:
 
 def pds4_pixel_scale(label_path: str) -> float:
     """Examine PDS4 label for image pixel scale (deg/pix)."""
-    raise InvalidPDS4Label()
+    raise PDS4LabelError()
     return 0
 
 
