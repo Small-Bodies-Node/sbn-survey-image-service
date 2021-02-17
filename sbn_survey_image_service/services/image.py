@@ -6,18 +6,18 @@ __all__ = [
 ]
 
 import os
+import subprocess
 from sbn_survey_image_service.data.core import url_to_local_file
 from tempfile import mkstemp
 from typing import List, Optional, Tuple
-from subprocess import check_output
 
 from sqlalchemy.orm.exc import NoResultFound
-import astropy.units as u
+from astropy.coordinates import Angle
 
 from .database_provider import data_provider_session, Session
 from ..data import url_to_local_file
 from ..models.image import Image
-from ..exceptions import InvalidImageID
+from ..exceptions import InvalidImageID, ParameterValueError, FitscutError
 from ..env import ENV
 
 FORMATS = {
@@ -63,21 +63,21 @@ def image_query(obs_id: str, ra: Optional[float] = None,
     """
 
     if format not in ['fits', 'png', 'jpeg']:
-        raise ValueError('image_query format must be fits, png, or jpeg.')
+        raise ParameterValueError(
+            'image_query format must be fits, png, or jpeg.')
 
     session: Session
+    exc: Exception
     with data_provider_session() as session:
-        exc: Exception
         try:
             im: Image = session.query(Image).filter(
                 Image.obs_id == obs_id).one()
         except NoResultFound as exc:
-            raise InvalidImageID from exc
+            raise InvalidImageID('Image ID not found in database.') from exc
 
         session.expunge(im)
 
     source_image_path: str = url_to_local_file(im.image_url)
-    source_label_path: str = url_to_local_file(im.label_url)
 
     cmd: List[str] = ['fitscut', '-f']
 
@@ -105,9 +105,13 @@ def image_query(obs_id: str, ra: Optional[float] = None,
         dec = min(max(dec, -90), 90)
 
         # cutout size 1 to ENV.MAXIMUM_CUTOUT_SIZE
-        size_deg: float = u.Quantity(size).to_value('deg')
+        try:
+            size_deg: float = Angle(size).deg
+        except ValueError as exc:
+            raise ParameterValueError(str(exc))
+
         size_pix: int = int(min(
-            max(float(size_deg) / im.pixel_scale, 1),
+            max(size_deg / im.pixel_scale, 1),
             ENV.MAXIMUM_CUTOUT_SIZE
         ))
 
@@ -133,6 +137,12 @@ def image_query(obs_id: str, ra: Optional[float] = None,
     fd, image_path = mkstemp(suffix=f'.{format}', dir=ENV.SBNSIS_CUTOUT_CACHE)
     os.close(fd)  # the file is created, let fitscut overwrite it
     cmd.extend([source_image_path, image_path])
-    check_output(cmd)
+
+    try:
+        subprocess.check_output(cmd)
+    except subprocess.CalledProcessError as exc:
+        raise FitscutError(f'''Error processing data.
+Command line = f{" ".join(cmd)}
+Process returned: f{exc.output}''') from exc
 
     return image_path, attachment_filename

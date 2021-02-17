@@ -28,6 +28,6 @@ def label_query(obs_id: str) -> Tuple[str, str]:
                 .one()[0]
             )
         except NoResultFound as exc:
-            raise InvalidImageID from exc
+            raise InvalidImageID('Image ID not found in database.') from exc
 
     return url_to_local_file(label_url), os.path.basename(label_url)

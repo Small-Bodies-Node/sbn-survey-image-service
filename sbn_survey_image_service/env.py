@@ -21,6 +21,8 @@ class ENV():
     BASE_HREF: str = str(os.getenv("BASE_HREF", "/"))
     SBNSIS_CUTOUT_CACHE: str = str(os.getenv("SBNSIS_CUTOUT_CACHE", "/tmp"))
     MAXIMUM_CUTOUT_SIZE: int = int(os.getenv("MAXIMUM_CUTOUT_SIZE", 1024))
+    SBNSIS_LOG_FILE: str = str(os.path.abspath(
+        os.getenv('SBNSIS_LOG_FILE', './logging/sbnsis.log')))
 
     # Numeric properties
     LIVE_GUNICORN_INSTANCES: int = int(

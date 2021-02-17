@@ -18,7 +18,7 @@ from pds3 import PDS3Label
 from pds4_tools.reader.read_label import read_label as pds4_read_label
 
 from ..exceptions import (LabelError, InvalidNEATImage, PDS3LabelError,
-                          PDS4LabelError, InvalidImagePath, SBNSISWarning)
+                          PDS4LabelError, InvalidImageURL, SBNSISWarning)
 from ..data import valid_pds3_label
 from ..services.database_provider import data_provider_session, db_engine
 from ..models import Base
@@ -81,7 +81,7 @@ def add_label(label_path: str, session: Session, base_url: str = 'file://',
     except SBNSISWarning as exc:
         logger.warning(exc)
         return False
-    except (LabelError, InvalidImagePath) as exc:
+    except (LabelError, InvalidImageURL) as exc:
         logger.error(exc)
         return False
 
@@ -154,7 +154,7 @@ def pds3_image(label_path: str) -> Image:
         im.image_url += '.fz'
 
     if not os.path.exists(im.image_url):
-        raise InvalidImagePath(f'Could not find image in {label_path}.')
+        raise InvalidImageURL(f'Could not find image in {label_path}.')
 
     return im
 

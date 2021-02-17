@@ -89,8 +89,18 @@ It is assumed that survey images are FITS-compatible with a World Coordinate Sys
 
 If you have nodemon globally installed, then you can develop your api code and have it automatically update on changes by running `_develop_apis`. Otherwise, just run `python -m sbn_survey_image_service.api.app`.
 
-## Deployment
+### Deployment
 
 A script is supplied called `_gunicorn_manager` that takes the arguments `start|stop|status|restart` to launch the app as a background process with the gunicorn WSGI server for production serving. The number of workers is controlled with the env variable `LIVE_GUNICORN_INSTANCES`. If you have trouble getting gunicorn to work, you can run the manager with 0 as the 2nd argument to start it off in non-daemon mode.
 
 It is recommended that you make the gunicorn-powered server accesible to the outside world by proxy-passing requests through an https-enabled web server like apache.
+
+### Logging
+Application error and informational logging is sent to the standard error stream (stderr) and the file specified by the `SBNSIS_LOG_FILE` environment variable.
+
+Successful requests will produce two log items, the parameters and the results as JSON-formatted strings, linked by a randomly generated job ID:
+```
+INFO 2021-02-17 14:10:16,960: {"job_id": "013f7515aa074ee58ad5929c8391a366", "id": "urn:nasa:pds:gbo.ast.neat.survey:data_tricam:p20021023_obsdata_20021023113833a", "ra": 47.4495603, "dec": 32.9424075, "size": "5arcmin", "format": "fits", "download": true}
+INFO 2021-02-17 14:10:18,339: {"job_id": "013f7515aa074ee58ad5929c8391a366", "filename": "/hylonome3/transient/tmpw8s8qj1b.fits", "attachment_filename": "20021023113833a.fit_47.4495632.94241_5arcmin.fits", "mime_type": "image/fits"}
+```
+OpenAPI errors (e.g., invalid parameter values) are not logged.  Internal code errors will be logged with a code traceback.

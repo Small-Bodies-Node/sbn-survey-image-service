@@ -1,5 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""App exceptions."""
+"""App exceptions.
+
+Classes intended to be caught by the API app are annotated with HTTP status
+codes.
+
+"""
 
 
 class SBNSISException(Exception):
@@ -8,10 +13,11 @@ class SBNSISException(Exception):
 
 class InvalidImageID(SBNSISException):
     """Image ID is not in database."""
+    code = 404
 
 
-class InvalidImagePath(SBNSISException):
-    """Image path is invalid."""
+class InvalidImageURL(SBNSISException):
+    """Image URL is invalid."""
 
 
 class LabelError(SBNSISException):
@@ -32,6 +38,17 @@ class BadPixelScale(SBNSISException):
 
 class ParameterValueError(SBNSISException):
     """Parameter value error."""
+    code = 400
+
+
+class FitscutError(SBNSISException):
+    """Error processing data with fitscut."""
+    code = 500
+
+
+class DatabaseError(SBNSISException):
+    """Database error."""
+    code = 500
 
 
 class SBNSISWarning(SBNSISException):
