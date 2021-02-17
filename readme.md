@@ -8,7 +8,7 @@ Live at the PDS [Small Bodies Node](https://)
 
 This repo houses scripts and code to build REST API services that enable a user to retrieve SBN archive images and cutouts thereof. For example, a user may request a full-frame image from the ATLAS survey archive, or a small cutout around their object of interest.
 
-The intent is to be compatible with the IVOA's [Simple Image Access protocol](https://www.ivoa.net/documents/SIA/).  However, this compatibility is incomplete.
+The intent is to be compatible with the IVOA's [Simple Image Access protocol](https://www.ivoa.net/documents/SIA/), which is based on the [ObsCore Data Model](https://www.ivoa.net/documents/ObsCore/20111028/).  However, this compatibility is presently incomplete.
 
 ## Code Features
 
@@ -41,7 +41,7 @@ This repo has code for:
 
 The following steps are needed to set up the code base for whatever aspect you want to work on:
 
-- The codebase is operated using bash scripts that begin with the `\_` underscore character
+- The codebase is operated using bash scripts that begin with the `_` underscore character
 - Prerequisites for local development:
   - Your choice of database backend, e.g., sqlite3, or a running postgresql server with credentials to read/write
   - python (& pip) v3.6+

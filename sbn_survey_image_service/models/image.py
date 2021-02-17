@@ -6,6 +6,7 @@ Image: ORM Model for table of served image data products.
 """
 
 from sqlalchemy import Column, String, Integer
+from sqlalchemy.sql.sqltypes import Float
 from . import Base
 
 
@@ -66,7 +67,7 @@ class Image(Base):
         IVOA ObsCore: dataproduct_type
     """
 
-    calibration_level: str = Column(Integer, nullable=True)
+    calibration_level: int = Column(Integer, nullable=True)
     """
         Data calibration level.
 
@@ -82,6 +83,11 @@ class Image(Base):
         PDS3: e.g., TARGET_NAME
         PDS4: Target_Identification/name
         IVOA ObsCore: target_name
+    """
+
+    pixel_scale: float = Column(Float(32), nullable=True)
+    """
+        Image pixel scale in degrees.
     """
 
     image_url: str = Column(String, nullable=True)

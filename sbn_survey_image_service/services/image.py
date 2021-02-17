@@ -13,12 +13,11 @@ from subprocess import check_output
 
 from sqlalchemy.orm.exc import NoResultFound
 import astropy.units as u
-from pds3 import PDS3Label
 
 from .database_provider import data_provider_session, Session
-from ..data import valid_pds3_label, url_to_local_file
+from ..data import url_to_local_file
 from ..models.image import Image
-from ..exceptions import BadPixelScale, InvalidImageID, PDS3LabelError, PDS4LabelError
+from ..exceptions import InvalidImageID
 from ..env import ENV
 
 FORMATS = {
@@ -28,42 +27,6 @@ FORMATS = {
 
 # make cutout cache directory, as needed
 os.system(f'mkdir -p {ENV.SBNSIS_CUTOUT_CACHE}')
-
-
-def get_pixel_scale(label_path: str) -> float:
-    """Get mean pixel scale for image."""
-
-    if valid_pds3_label(label_path):
-        return pds3_pixel_scale(label_path)
-    else:
-        return pds4_pixel_scale(label_path)
-
-
-def pds3_pixel_scale(label_path: str) -> float:
-    """Examine PDS3 label for image pixel scale (deg/pix)."""
-
-    try:
-        label: PDS3Label = PDS3Label(label_path)
-    except:
-        raise PDS3LabelError(f'Error reading {label_path}.')
-
-    scales: List[float] = [
-        abs(label['IMAGE'][k].to_value('deg'))
-        for k in ['HORIZONTAL_PIXEL_FOV', 'VERTICAL_PIXEL_FOV']
-        if k in label['IMAGE']
-    ]
-    scale: float = sum(scales) / len(scales)
-
-    if scale <= 0 or scale > 10:
-        raise BadPixelScale(scale)
-
-    return scale
-
-
-def pds4_pixel_scale(label_path: str) -> float:
-    """Examine PDS4 label for image pixel scale (deg/pix)."""
-    raise PDS4LabelError()
-    return 0
 
 
 def image_query(obs_id: str, ra: Optional[float] = None,
@@ -142,10 +105,9 @@ def image_query(obs_id: str, ra: Optional[float] = None,
         dec = min(max(dec, -90), 90)
 
         # cutout size 1 to ENV.MAXIMUM_CUTOUT_SIZE
-        pixel_scale: float = get_pixel_scale(source_label_path)
         size_deg: float = u.Quantity(size).to_value('deg')
         size_pix: int = int(min(
-            max(float(size_deg) / pixel_scale, 1),
+            max(float(size_deg) / im.pixel_scale, 1),
             ENV.MAXIMUM_CUTOUT_SIZE
         ))
 

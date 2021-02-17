@@ -139,6 +139,13 @@ def pds3_image(label_path: str) -> Image:
     else:
         pointer = '^IMAGE'
 
+    scales: List[float] = [
+        abs(label['IMAGE'][k].to_value('deg'))
+        for k in ['HORIZONTAL_PIXEL_FOV', 'VERTICAL_PIXEL_FOV']
+        if k in label['IMAGE']
+    ]
+    im.pixel_scale = sum(scales) / len(scales)
+
     im.image_url = os.path.join(
         os.path.dirname(label_path), label[pointer][0].lower())
 
@@ -183,19 +190,21 @@ def pds4_image(label_path: str) -> Image:
         im: Image = Image(
             obs_id=lid,
             collection=lid[:lid.rfind(':')],
-            facility=label.find(
+            # split and join in case of line feed characters
+            facility=' '.join(label.find(
                 "Observation_Area/Observing_System/Observing_System_Component"
                 "/Internal_Reference/[reference_type='is_telescope']/../name")
-            .text.replace('\n', ' '),
-            instrument=label.find(
+                .text.split()),
+            instrument=' '.join(label.find(
                 "Observation_Area/Observing_System/Observing_System_Component"
                 "/Internal_Reference/[reference_type='is_instrument']/../name")
-            .text.replace('\n', ' '),
+                .text.split()),
             target=label.find(
                 "Observation_Area/Target_Identification/name").text,
             calibration_level=PDS4CalibrationLevel[label.find(
                 'Observation_Area/Primary_Result_Summary/processing_level').text
             ],
+            pixel_scale=None,  # not sure yet
             label_url=label_path,
             # return the first file name found
             image_url=os.path.join(
@@ -214,6 +223,10 @@ def pds4_image(label_path: str) -> Image:
         if not valid_neat_image(label):
             raise InvalidNEATImage(
                 f'{label_path} does not appear to be a NEAT on-sky image.')
+        if lid.contains('geodss'):
+            im.pixel_scale = 1.43
+        elif lid.contains('tricam'):
+            im.pixel_scale = 1.01
 
     if fz_compressed:
         im.image_url += '.fz'
