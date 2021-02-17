@@ -43,19 +43,20 @@ The following steps are needed to set up the code base for whatever aspect you w
 
 - The codebase is operated using bash scripts that begin with the `\_` underscore character
 - Prerequisites for local development:
-  - Running postgresql server with credentials to read/write
+  - Your choice of database backend, e.g., sqlite3, or a running postgresql server with credentials to read/write
   - python (& pip) v3.6+
 - Clone the repo locally:
   ```
       git clone https://github.com/Small-Bodies-Node/sbn-survey-image-service
       cd sbn-survey-image-service
   ```
-- Run `cp .env-template .env` and edit the variables therein
+- Copy the environment variable definition template and edit to suit your needs: `cp .env-template .env`.
 - Always begin by `source _initial_setup.sh`. This will:
   - Create/activate a python virtual environment
-  - Install dependencies to virtual env
+  - Install dependencies (e.g., fitscut) to the virtual env
   - Make available to your shell the variables `.env`
 - Optionally test your set up:
+  - Be aware that the testing suite will use the database specified in the `.env` file.
   - `bash _tests`.  If the test dataset does not exist, then this will take a few minutes.
   - When the test data is no longer needed:
     - Delete test data set from database: `python3 -m sbn_survey_image_service.data.test.generate --delete`
@@ -64,14 +65,18 @@ The following steps are needed to set up the code base for whatever aspect you w
 
 ### Adding archival data
 
-The `sbn_survey_image_service.data.add` sub-module is used to add images to the database.  It scans PDS3 or PDS4 labels, and saves data product metadata, path to the label, and path to the image data to the database, indexed by the product ID (PDS3) or logical identifier (PDS4).  The sub-module may be run as a command-line script `python3 -m sbn_survey_image_service.data.add`.  The script will automatically create the database in case it does not exist.  For example, to search a NEAT survey directory for PDS3 image labels and data:
+The `sbn_survey_image_service.data.add` sub-module is used to add images to the database.  It scans PDS3 or PDS4 labels, and saves data product metadata, path to the label, and path to the image data to the database, indexed by the product ID (PDS3) or logical identifier (PDS4).  The sub-module may be run as a command-line script `python3 -m sbn_survey_image_service.data.add`.  The script will automatically create the database in case it does not exist.  For example, to search a NEAT survey directory for PDS4 image labels and data, and to form URLs with which the data may be retrieved:
 ```
-python3 -m sbn_survey_image_service.data.add /path/to/archives/neat/tricam/data/p20020718/obsdata
+python3 -m sbn_survey_image_service.data.add -r \
+    /hylonome3/sbnsurveys/source-metadata/gbo.ast.neat.survey/data_geodss/g19960417/obsdata
 ```
 
 Data may be served to the image service via HTTP(S).  In this case, the `add` script must still be run on locally accessible files, but an appropriate URL may be formed using the `--base-url` and `--strip-leading` parameters:
 ```
-python3 -m sbn_survey_image_service.data.add /path/to/archives/neat/tricam/data/p20020718/obsdata --base-url=https://sbnarchive.psi.edu/pds3/ --strip-leading=/path/to/archives
+python3 -m sbn_survey_image_service.data.add -r \
+    /hylonome3/sbnsurveys/source-metadata/gbo.ast.neat.survey/data_geodss/g19960417/obsdata \
+    --base-url=https://sbnarchive.psi.edu/pds4/surveys \
+    --strip-leading=/hylonome3/sbnsurveys/source-metadata/
 ```
 
 For a summary of command-line parameters, use the `--help` option.
