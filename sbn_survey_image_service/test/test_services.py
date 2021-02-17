@@ -6,13 +6,11 @@ import pytest
 from sqlalchemy.orm.session import Session
 import numpy as np
 from astropy.io import fits
-from tempfile import mkstemp
 
 from ..data.test import generate
 from ..services import data_provider_session, image_query, label_query
-from ..services.image import pds3_pixel_scale
 from ..env import ENV
-from ..exceptions import BadPixelScale, InvalidImageID, PDS3LabelError
+from ..exceptions import InvalidImageID, ParameterValueError
 
 
 @pytest.fixture(autouse=True)
@@ -29,7 +27,7 @@ def test_label_query():
     attachment_filename: str
     image_url, attachment_filename = label_query('test-000023-ra')
     assert image_url == os.path.join(
-        ENV.TEST_DATA_PATH, 'test-000023-ra.lbl')
+        'file://', ENV.TEST_DATA_PATH, 'test-000023-ra.lbl')
 
 
 def test_label_query_fail():
@@ -103,52 +101,5 @@ def test_image_query_obs_id_fail():
 
 
 def test_image_query_format_fail():
-    with pytest.raises(ValueError):
+    with pytest.raises(ParameterValueError):
         image_query('', format='something else')
-
-
-def test_pds3_pixel_scale_invalid_label():
-    fd: int
-    fn: str
-    fd, fn = mkstemp()
-    os.close(fd)
-    with open(fn, 'w') as outf:
-        outf.write('''\r
-This is not a PDS3 label.\r
-''')
-    with pytest.raises(PDS3LabelError):
-        pds3_pixel_scale(fn)
-
-    os.unlink(fn)
-
-
-def test_pds3_pixel_scale_invalid_pixel_scale():
-    fd: int
-    fn: str
-    fd, fn = mkstemp()
-    os.close(fd)
-    with open(fn, 'w') as outf:
-        outf.write(f'''PDS_VERSION_ID                     = PDS3                                     \r
-COMMENT                            = "Dummy label"                            \r
-OBJECT                             = IMAGE                                    \r
-  HORIZONTAL_PIXEL_FOV             = 11.00000 <DEGREE>                        \r
-  VERTICAL_PIXEL_FOV               = 11.00000 <DEGREE>                        \r
-END_OBJECT                         = IMAGE                                    \r                                                                              
-END                                                                           ''')
-
-    with pytest.raises(BadPixelScale):
-        pds3_pixel_scale(fn)
-
-    with open(fn, 'w') as outf:
-        outf.write(f'''PDS_VERSION_ID                     = PDS3                                     \r
-COMMENT                            = "Dummy label"                            \r
-OBJECT                             = IMAGE                                    \r
-  HORIZONTAL_PIXEL_FOV             = 0.000000 <DEGREE>                        \r
-  VERTICAL_PIXEL_FOV               = 0.000000 <DEGREE>                        \r
-END_OBJECT                         = IMAGE                                    \r                                                                              
-END                                                                           ''')
-
-    with pytest.raises(BadPixelScale):
-        pds3_pixel_scale(fn)
-
-    os.unlink(fn)

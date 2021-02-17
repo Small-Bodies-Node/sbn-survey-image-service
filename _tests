@@ -4,4 +4,5 @@
 pytest --verbose tests sbn_survey_image_service \
   --cov=sbn_survey_image_service \
   --cov-report=html \
-  --remote-data
+  --remote-data \
+  -x

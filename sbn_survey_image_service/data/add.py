@@ -242,8 +242,7 @@ def valid_neat_image(label: ET.ElementTree) -> bool:
 
 
 def add_directory(path: str, session: Session, recursive: bool = False,
-                  extensions: Optional[List[str]] = None,
-                  **kwargs: Dict[str, str]) -> None:
+                  extensions: Optional[List[str]] = None) -> None:
     """Search directory for labels and add to database.
 
 
@@ -262,8 +261,6 @@ def add_directory(path: str, session: Session, recursive: bool = False,
         Files with these extensions are consdiered PDS labels.  Default:
         .lbl, .xml.
 
-    **kwargs :
-        Options to pass to `add_label`.
 
     """
 
@@ -284,7 +281,7 @@ def add_directory(path: str, session: Session, recursive: bool = False,
             if os.path.splitext(filename)[1].lower() in extensions:
                 n_files += 1
                 n_added += add_label(os.path.join(dirpath,
-                                                  filename), session, **kwargs)
+                                                  filename), session)
 
         if not recursive:
             break

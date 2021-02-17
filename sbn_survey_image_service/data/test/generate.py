@@ -21,6 +21,7 @@ from astropy.coordinates import SkyCoord, Angle
 from astropy.io import fits
 from astropy.wcs import WCS
 
+from ..add import add_directory
 from ...services.database_provider import data_provider_session, db_engine
 from ...models import Base
 from ...models.image import Image
@@ -109,8 +110,12 @@ def create_data(session, path):
         data: Angle
         for data, label in zip((coordinates.ra, coordinates.dec), ('ra', 'dec')):
             observation_number += 1
-            image_path: str = f'{path}/test-{observation_number:06d}-{label}.fits'
+            basename: str = f'test-{observation_number:06d}-{label}.fits'
+            image_path: str = f'{path}/{basename}'
             label_path: str = image_path.replace('.fits', '.lbl')
+
+            if os.path.exists(image_path) and os.path.exists(label_path):
+                continue
 
             hdu: fits.HDUList = fits.HDUList()
             hdu.append(fits.PrimaryHDU(
@@ -122,26 +127,23 @@ def create_data(session, path):
             outf: io.IOBase
             with open(label_path, 'w') as outf:
                 outf.write(f'''PDS_VERSION_ID                     = PDS3                                     \r
-COMMENT                            = "Dummy label"                            \r
+^IMAGE                             = ("{basename}", 5)                 \r
+PRODUCT_NAME                       = "SBNSIS Test Image"                      \r
+PRODUCT_ID                         = "test-{observation_number:06d}-{label}"  \r
+DATA_SET_ID                        = "test-collection"                        \r
+INSTRUMENT_HOST_NAME               = "test-facility"                          \r
+INSTRUMENT_NAME                    = "test-instrument"                        \r
+TARGET_NAME                        = "test-target"                            \r
 OBJECT                             = IMAGE                                    \r
   HORIZONTAL_PIXEL_FOV             = {pixel_size:.6f} <DEGREE>                        \r
   VERTICAL_PIXEL_FOV               = {pixel_size:.6f} <DEGREE>                        \r
 END_OBJECT                         = IMAGE                                    \r
 END                                                                           ''')
 
-            im: Image = Image(
-                obs_id=f'test-{observation_number:06d}-{label}',
-                collection='test-collection',
-                facility='test-facility',
-                instrument='test-instrument',
-                target='test-sky',
-                label_url='file://' + label_path,
-                image_url='file://' + image_path
-            )
-            session.add(im)
-
             if observation_number % 1000 == 0:
                 logger.info(observation_number)
+
+    add_directory(ENV.TEST_DATA_PATH, session)
 
     logger.info(
         'Created and added %d test images and their labels to the database.',
