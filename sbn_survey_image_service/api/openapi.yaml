@@ -16,7 +16,7 @@ paths:
         - name: id
           in: path
           description: Unique image data product ID (PDS3) or logical identifier (PDS4)
-          example: urn:nasa:pds:gbo.ast.neat.survey:data_tricam:p20021023_obsdata_20021023113833a
+          example: urn:nasa:pds:gbo.ast.neat.survey:data_tricam:p20020222_obsdata_20020222120052c
           required: true
           allowEmptyValue: false
           schema:
@@ -32,7 +32,7 @@ paths:
         - name: ra
           in: query
           description: Cutout image center Right Ascension (J2000) in degrees.
-          example: 47.4495603
+          example: 174.62244
           required: false
           allowEmptyValue: false
           schema:
@@ -42,7 +42,7 @@ paths:
         - name: dec
           in: query
           description: Cutout image center Declination (J2000) in degrees.
-          example: 32.9424075
+          example: 17.97594
           required: false
           allowEmptyValue: false
           schema:
