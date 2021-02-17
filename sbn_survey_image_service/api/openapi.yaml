@@ -57,7 +57,7 @@ paths:
           allowEmptyValue: false
           schema:
             type: string
-            pattern: '^\d(\.\d*)?(arcsec|arcmin|deg|degree|rad|radian)$'
+            pattern: '^\d+(\.\d*)?(arcsec|arcmin|deg|degree|rad|radian)$'
         - name: download
           in: query
           description: Prompt for downloading via web browsers (sets HTTP Content-Disposition).
