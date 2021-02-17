@@ -223,9 +223,9 @@ def pds4_image(label_path: str) -> Image:
         if not valid_neat_image(label):
             raise InvalidNEATImage(
                 f'{label_path} does not appear to be a NEAT on-sky image.')
-        if lid.contains('geodss'):
+        if 'geodss' in lid:
             im.pixel_scale = 1.43
-        elif lid.contains('tricam'):
+        elif 'tricam' in lid:
             im.pixel_scale = 1.01
 
     if fz_compressed:
