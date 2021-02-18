@@ -5,7 +5,7 @@
 """
 
 import multiprocessing
-from env import ENV
+from sbn_survey_image_service.env import ENV
 
 workers: int = ENV.LIVE_GUNICORN_INSTANCES
 

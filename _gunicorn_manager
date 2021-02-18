@@ -45,7 +45,7 @@ d_start() {
         ### Enter src, start gunicorn, exit
         echo "-----------------------------------------------------"
         echo "This API is not running; begin workers in production!"
-        IS_DAEMON=$is_daemon gunicorn sbs_sis.api.app:app \
+        IS_DAEMON=$is_daemon gunicorn sbn_survey_image_service.api.app:app \
             --config .gunicorn.config.py \
             --pid .pid.txt \
             --name $APP_NAME \
@@ -110,7 +110,7 @@ d_restart() {
 
 archive_logs() {
     printf "\n\nArchiving previous logs..."
-    (cd logging; /sbin/logrotate -f logrotate.config)
+    (cd logging; /usr/sbin/logrotate --force --state logrotate.state logrotate.config)
     printf " done.\n"
 }
 

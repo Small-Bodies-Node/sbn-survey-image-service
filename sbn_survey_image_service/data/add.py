@@ -23,6 +23,7 @@ from ..data import valid_pds3_label
 from ..services.database_provider import data_provider_session, db_engine
 from ..models import Base
 from ..models.image import Image
+from ..logging import get_logger
 
 
 def _remove_prefix(s: str, prefix: str):
@@ -70,7 +71,7 @@ def add_label(label_path: str, session: Session, base_url: str = 'file://',
 
     """
 
-    logger: logging.Logger = logging.getLogger(__name__)
+    logger: logging.Logger = get_logger()
 
     exc: Exception
     try:
@@ -242,7 +243,7 @@ def valid_neat_image(label: ET.ElementTree) -> bool:
 
 
 def add_directory(path: str, session: Session, recursive: bool = False,
-                  extensions: Optional[List[str]] = None) -> None:
+                  extensions: Optional[List[str]] = None, **kwargs) -> None:
     """Search directory for labels and add to database.
 
 
@@ -261,13 +262,15 @@ def add_directory(path: str, session: Session, recursive: bool = False,
         Files with these extensions are consdiered PDS labels.  Default:
         .lbl, .xml.
 
+    **kwargs
+        Keyword arguments for ``add_label``.
 
     """
 
     extensions = ['.lbl', '.xml'] if extensions is None else extensions
     extensions = [x.lower() for x in extensions]
 
-    logger: logging.Logger = logging.getLogger(__name__)
+    logger: logging.Logger = get_logger()
     logger.info('Searching directory %s', path)
     n_files: int = 0
     n_added: int = 0
@@ -314,13 +317,13 @@ def _parse_args() -> argparse.Namespace:
 
 def _main() -> None:
     args: argparse.Namespace = _parse_args()
+
+    logger: logging.Logger = get_logger()
+    logger.setLevel(logging.DEBUG if args.v else logging.INFO)
+
     # options to pass on to add_* functions:
     kwargs = dict(base_url=args.base_url,
                   strip_leading=args.strip_leading.rstrip('/'))
-    logging.basicConfig(
-        level=logging.DEBUG if args.v else logging.INFO
-    )
-
     session: Session
     with data_provider_session() as session:
         if args.create:

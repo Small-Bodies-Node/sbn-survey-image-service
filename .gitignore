@@ -17,7 +17,9 @@ src/**
 data/**
 htmlcov/**
 .coverage
-logging/*log
+logging/*.log
+logging/*state
+logging/old-logs
 
 # local sqlite databases
 *.db

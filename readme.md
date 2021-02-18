@@ -66,6 +66,7 @@ The following steps are needed to set up the code base for whatever aspect you w
     - Delete test data set from database: `python3 -m sbn_survey_image_service.data.test.generate --delete`
     - Files in `data/test` must be removed manually.
 - Add data to the archive (see below).
+- Run in development or deployment modes (see below).
 
 ### Adding archival data
 
@@ -89,7 +90,7 @@ Due to survey-to-survey label differences, it is unlikely that the script will w
 
 It is assumed that survey images are FITS-compatible with a World Coordinate System defined for a standard sky reference frame (e.g., J2000).  The cutout service uses the FITS header, not the PDS labels, to define the sub-frame.  However, the PDS label is examined for the pixel scale.
 
-### APIs
+### Development
 
 If you have nodemon globally installed, then you can develop your api code and have it automatically update on changes by running `_develop_apis`. Otherwise, just run `python -m sbn_survey_image_service.api.app`.
 
