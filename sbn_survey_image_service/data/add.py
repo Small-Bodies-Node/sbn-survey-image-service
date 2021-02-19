@@ -283,8 +283,8 @@ def add_directory(path: str, session: Session, recursive: bool = False,
         for filename in filenames:
             if os.path.splitext(filename)[1].lower() in extensions:
                 n_files += 1
-                n_added += add_label(os.path.join(dirpath,
-                                                  filename), session)
+                n_added += add_label(os.path.join(dirpath, filename),
+                                     session, **kwargs)
 
         if not recursive:
             break
