@@ -238,7 +238,10 @@ def pds4_image(label_path: str) -> Image:
 def valid_neat_image(label: ET.ElementTree) -> bool:
     """Only ingest NEAT survey on-sky images."""
 
-    title: str = label.find('Identification_Area/title').text
+    try:
+        title: str = label.find('Identification_Area/title').text
+    except AttributeError:
+        return False
     return title in ['NEAT TRI-CAM IMAGE', 'NEAT GEODSS IMAGE']
 
 
