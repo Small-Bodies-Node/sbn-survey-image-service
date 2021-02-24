@@ -145,4 +145,7 @@ def image_query(obs_id: str, ra: Optional[float] = None,
 Command line = f{" ".join(cmd)}
 Process returned: f{exc.output}''') from exc
 
+    # rw-rw-r--
+    os.chmod(image_path, 664)
+
     return image_path, attachment_filename

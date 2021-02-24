@@ -51,4 +51,7 @@ def url_to_local_file(url: str) -> str:
         with open(fd, 'wb') as outf:
             outf.write(r.content)
 
+        # rw-rw-r--
+        os.chmod(path, 664)
+
     return path
