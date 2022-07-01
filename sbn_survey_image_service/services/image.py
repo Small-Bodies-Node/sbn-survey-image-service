@@ -146,6 +146,8 @@ Command line = f{" ".join(cmd)}
 Process returned: f{exc.output}''') from exc
 
     # rw-rw-r--
-    os.chmod(image_path, 664)
+    # In [16]: (stat.S_IFREG | stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH)
+    # Out[16]: 33204
+    os.chmod(image_path, 33204)
 
     return image_path, attachment_filename

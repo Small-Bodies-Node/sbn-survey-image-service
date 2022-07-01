@@ -52,6 +52,8 @@ def url_to_local_file(url: str) -> str:
             outf.write(r.content)
 
         # rw-rw-r--
-        os.chmod(path, 664)
+        # In [16]: (stat.S_IFREG | stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH)
+        # Out[16]: 33204
+        os.chmod(path, 33204)
 
     return path
