@@ -1,0 +1,16 @@
+#!/usr/bin/env false
+
+if [ ! -f $PWD/.env ]; then
+    echo -e "No .env file found!!!"
+    return 1
+fi
+source .env
+
+clear
+echo -e """${GRE}
+=====================================
+Activating Python Virtual Environment
+=====================================
+${WHI}"""
+
+source ./.venv/bin/activate
