@@ -3,12 +3,13 @@
 
 __all__ = [
     'valid_pds3_label',
-    'url_to_local_file'
+    'url_to_local_file',
+    'generate_cache_filename'
 ]
 
 import io
 import os
-from tempfile import mkstemp
+import hashlib
 import requests
 from requests.models import HTTPError
 from urllib.parse import ParseResult, urlparse
@@ -33,7 +34,23 @@ def valid_pds3_label(filename: str) -> bool:
         return False
 
 
-def url_to_local_file(url: str, uncompress: bool = True) -> str:
+def _generate_image_path(*args):
+    """Make consistent cutout file name based on MD5 sum of the arguments.
+
+
+    Parameters
+    ----------
+    *args : strings
+        Order is important.
+
+    """
+
+    m = hashlib.md5()
+    m.update(''.join(args).encode())
+    return os.path.join(ENV.SBNSIS_CUTOUT_CACHE, m.hexdigest())
+
+
+def url_to_local_file(url: str) -> str:
     """Returns path to a local file, fetching remote files as needed."""
     path: str
     p: ParseResult = urlparse(url)
@@ -44,11 +61,9 @@ def url_to_local_file(url: str, uncompress: bool = True) -> str:
         if r.status_code != 200:
             raise HTTPError(r.status_code)
 
-        fd: int
-        #text: bool = r.headers.get('Content-Type', '').startswith('text')
-        fd, path = mkstemp(dir=ENV.SBNSIS_CUTOUT_CACHE)
+        path = generate_cache_filename(url)
         outf: io.IOBase
-        with open(fd, 'wb') as outf:
+        with open(path, 'wb') as outf:
             outf.write(r.content)
 
         # rw-rw-r--
@@ -56,6 +71,20 @@ def url_to_local_file(url: str, uncompress: bool = True) -> str:
         # Out[16]: 33204
         os.chmod(path, 33204)
 
-    # uncompress as needed
-
     return path
+
+
+def generate_cache_filename(*args):
+    """Make consistent file name based on MD5 sum of the arguments.
+
+
+    Parameters
+    ----------
+    *args : strings
+        Order is important.
+
+    """
+
+    m = hashlib.md5()
+    m.update(''.join(args).encode())
+    return os.path.join(ENV.SBNSIS_CUTOUT_CACHE, m.hexdigest())

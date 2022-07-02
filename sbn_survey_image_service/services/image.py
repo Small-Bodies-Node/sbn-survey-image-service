@@ -6,16 +6,14 @@ __all__ = [
 ]
 
 import os
-import hashlib
 import subprocess
-from tempfile import mkstemp
 from typing import List, Optional, Tuple
 
 from sqlalchemy.orm.exc import NoResultFound
 from astropy.coordinates import Angle
 
 from .database_provider import data_provider_session, Session
-from ..data import url_to_local_file
+from ..data import url_to_local_file, generate_cache_filename
 from ..models.image import Image
 from ..exceptions import InvalidImageID, ParameterValueError, FitscutError
 from ..env import ENV
@@ -24,9 +22,6 @@ FORMATS = {
     'png': '--png',
     'jpeg': '--jpg'
 }
-
-# make cutout cache directory, as needed
-os.system(f'mkdir -p {ENV.SBNSIS_CUTOUT_CACHE}')
 
 
 def image_query(obs_id: str, ra: Optional[float] = None,
@@ -105,8 +100,9 @@ def image_query(obs_id: str, ra: Optional[float] = None,
     attachment_filename += f'{suffix}.{format}'
 
     # was this file already generated?  serve it!
-    image_path = _generate_image_path(im.image_url, obs_id, str(ra), str(dec),
-                                      size, format)
+    image_path = generate_cache_filename(im.image_url, obs_id,
+                                         str(ra), str(dec),
+                                         size, format)
     if os.path.exists(image_path):
         return image_path, attachment_filename
 
@@ -180,28 +176,12 @@ Process returned: f{exc.output}''') from exc
 
 def _funpack(filename, extension):
     """Decompress an fpacked file and return the new file name."""
-    fd: int
-    fd, path = mkstemp(dir=ENV.SBNSIS_CUTOUT_CACHE)
-    os.close(fd)
-    os.unlink(path)  # funpack will not overwrite an existing file
 
-    cmd: List[str] = ['funpack', '-E', extension, '-O', path, filename]
-    subprocess.check_call(cmd)
+    decompressed_filename = generate_cache_filename(filename, extension)
 
-    return path
+    if not os.path.exists(decompressed_filename):
+        cmd: List[str] = ['funpack', '-E', extension, '-O',
+                          decompressed_filename, filename]
+        subprocess.check_call(cmd)
 
-
-def _generate_image_path(*args):
-    """Make consistent cutout file name based on MD5 sum of the arguments.
-
-
-    Parameters
-    ----------
-    *args : strings
-        Order is important.
-
-    """
-
-    m = hashlib.md5()
-    m.update(''.join(args).encode())
-    return os.path.join(ENV.SBNSIS_CUTOUT_CACHE, m.hexdigest())
+    return decompressed_filename
