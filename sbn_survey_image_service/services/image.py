@@ -6,8 +6,8 @@ __all__ = [
 ]
 
 import os
+import hashlib
 import subprocess
-from sbn_survey_image_service.data.core import url_to_local_file
 from tempfile import mkstemp
 from typing import List, Optional, Tuple
 
@@ -37,6 +37,9 @@ def image_query(obs_id: str, ra: Optional[float] = None,
 
     For cutouts, fitscut may not be able to work with fpacked data.  Edit code
     branching below for files that must be funpacked first.
+
+    Temporary files are saved to the path specified by the environment variable
+    SBNSIS_CUTOUT_CACHE and reused, if possible.
 
 
     Parameters
@@ -81,6 +84,33 @@ def image_query(obs_id: str, ra: Optional[float] = None,
 
         session.expunge(im)
 
+    # normalize coordinates
+    if ra is not None:
+        # RA 0 to 360
+        ra = ra % 360
+
+    if dec is not None:
+        # Dec -90 to 90
+        dec = min(max(dec, -90), 90)
+
+    # create attachment file name
+    suffix: str = ''
+    if (ra is None) or (dec is None) or (size is None):
+        # attachment file name is based on coordinates and size
+        suffix = f'_{ra:.5f}{dec:+.5f}_{size.replace(" ", "")}'
+
+    attachment_filename: str = os.path.splitext(
+        os.path.basename(im.image_url)
+    )[0]
+    attachment_filename += f'{suffix}.{format}'
+
+    # was this file already generated?  serve it!
+    image_path = _generate_image_path(im.image_url, obs_id, str(ra), str(dec),
+                                      size, format)
+    if os.path.exists(image_path):
+        return image_path, attachment_filename
+
+    # otherwise, get the data and process
     source_image_path: str = url_to_local_file(im.image_url)
 
     cmd: List[str] = ['fitscut', '-f']
@@ -91,24 +121,17 @@ def image_query(obs_id: str, ra: Optional[float] = None,
                     '--autoscale=1'
                     ])
 
-    suffix: str = ''
     if (ra is None) or (dec is None) or (size is None):
         if format == 'fits':
             # full-frame fits image, we're done
-            return url_to_local_file(im.image_url), os.path.basename(im.image_url)
+            return source_image_path, os.path.basename(im.image_url)
 
-        # otherwise return full-frame jpeg or png
+        # full-frame jpeg or png
         cmd.append('--all')
     else:
-        # append cutout arguments
+        # cutout requested
 
-        # RA 0 to 360
-        ra = ra % 360
-
-        # Dec -90 to 90
-        dec = min(max(dec, -90), 90)
-
-        # cutout size 1 to ENV.MAXIMUM_CUTOUT_SIZE
+        # cutout size is between 1 and ENV.MAXIMUM_CUTOUT_SIZE
         try:
             size_deg: float = Angle(size).deg
         except ValueError as exc:
@@ -138,19 +161,6 @@ def image_query(obs_id: str, ra: Optional[float] = None,
             f'-r {size_pix}',
         ])
 
-        # attachment file name is based on coordinates and size
-        suffix = f'_{ra:.5f}{dec:+.5f}_{size.replace(" ", "")}'
-
-    # create attachment file name
-    attachment_filename: str = os.path.splitext(
-        os.path.basename(im.image_url)
-    )[0]
-    attachment_filename += f'{suffix}.{format}'
-
-    # create a unique temporary file
-    image_path: str
-    fd, image_path = mkstemp(suffix=f'.{format}', dir=ENV.SBNSIS_CUTOUT_CACHE)
-    os.close(fd)  # the file is created, let fitscut overwrite it
     cmd.extend([source_image_path, image_path])
 
     try:
@@ -179,3 +189,19 @@ def _funpack(filename, extension):
     subprocess.check_call(cmd)
 
     return path
+
+
+def _generate_image_path(*args):
+    """Make consistent cutout file name based on MD5 sum of the arguments.
+
+
+    Parameters
+    ----------
+    *args : strings
+        Order is important.
+
+    """
+
+    m = hashlib.md5()
+    m.update(''.join(args).encode())
+    return os.path.join(ENV.SBNSIS_CUTOUT_CACHE, m.hexdigest())
