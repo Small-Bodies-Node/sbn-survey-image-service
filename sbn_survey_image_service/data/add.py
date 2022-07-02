@@ -9,16 +9,17 @@ import os
 import logging
 import argparse
 from urllib.parse import urlparse, urlunparse
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 import xml.etree.ElementTree as ET
 
+import numpy as np
 from sqlalchemy.orm.session import Session
 from pds3 import PDS3Label
-#from pds4_tools import pds4_read
 from pds4_tools.reader.read_label import read_label as pds4_read_label
 
-from ..exceptions import (LabelError, InvalidNEATImage, PDS3LabelError,
-                          PDS4LabelError, InvalidImageURL, SBNSISWarning)
+from ..exceptions import (LabelError, InvalidNEATImage, InvalidATLASImage,
+                          PDS3LabelError, PDS4LabelError, InvalidImageURL,
+                          SBNSISWarning)
 from ..data import valid_pds3_label
 from ..services.database_provider import data_provider_session, db_engine
 from ..models import Base
@@ -39,8 +40,10 @@ def _normalize_url(url):
     return urlunparse(urlparse(url))
 
 
+# Translate PDS4 processing level to IVOA ObsCore calib_level
 PDS4CalibrationLevel = {
-    'Calibrated': 2
+    'Calibrated': 2,
+    'Partially Processed': 1
 }
 
 
@@ -205,7 +208,7 @@ def pds4_image(label_path: str) -> Image:
             calibration_level=PDS4CalibrationLevel[label.find(
                 'Observation_Area/Primary_Result_Summary/processing_level').text
             ],
-            pixel_scale=None,  # not sure yet
+            pixel_scale=pds4_pixel_scale(label),
             label_url=label_path,
             # return the first file name found
             image_url=os.path.join(
@@ -228,11 +231,40 @@ def pds4_image(label_path: str) -> Image:
             im.pixel_scale = 1.43 / 3600
         elif 'tricam' in lid:
             im.pixel_scale = 1.01 / 3600
+    elif lid.startswith('urn:nasa:pds:gbo.ast.atlas.survey'):
+        # local ATLAS archive is compressed
+        fz_compressed = True
+        if not valid_atlas_image(label):
+            raise InvalidATLASImage(f'{label_path} does not appear to be an '
+                                    'ATLAS prime image.')
 
     if fz_compressed:
         im.image_url += '.fz'
 
     return im
+
+
+def pds4_pixel_scale(label: ET.ElementTree) -> Union[float, None]:
+    """Compute average pixel scale from Earth_Based_Telescope discipline dictionary."""
+
+    wcs: ET.ElementTree = label.find(
+        ".//ebt:World_Coordinate_System",
+        namespaces={"ebt": "http://pds.nasa.gov/pds4/ebt/v1"})
+
+    if wcs is None:
+        return None
+
+    matches: List[ET.ElementTree] = wcs.findall(
+        "ebt:Coordinate_Frame_Transformation_Matrix/ebt:Transformation_Element/ebt:element_value",
+        namespaces={"ebt": "http://pds.nasa.gov/pds4/ebt/v1"})
+    elements: List[float] = [float(x.text) for x in matches]
+
+    if len(elements) != 4:
+        return None
+
+    cdelt: float = np.sqrt(np.abs(elements[0] * elements[3])
+                           + np.abs(elements[1] * elements[2]))
+    return cdelt
 
 
 def valid_neat_image(label: ET.ElementTree) -> bool:
@@ -243,6 +275,17 @@ def valid_neat_image(label: ET.ElementTree) -> bool:
     except AttributeError:
         return False
     return title in ['NEAT TRI-CAM IMAGE', 'NEAT GEODSS IMAGE']
+
+
+def valid_atlas_image(label: ET.ElementTree) -> bool:
+    """Only ingest ATLAS reduced images.
+
+    If the LID ends in _fits then it is probably what we want.
+
+    """
+
+    lid: str = label.find('Identification_Area/logical_identifier').text
+    return lid.endswith('_fits')
 
 
 def add_directory(path: str, session: Session, recursive: bool = False,

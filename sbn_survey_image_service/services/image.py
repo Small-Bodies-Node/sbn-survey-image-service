@@ -35,6 +35,10 @@ def image_query(obs_id: str, ra: Optional[float] = None,
     """Query database for image file or cutout thereof.
 
 
+    For cutouts, fitscut may not be able to work with fpacked data.  Edit code
+    branching below for files that must be funpacked first.
+
+
     Parameters
     ----------
     obs_id : str
@@ -115,6 +119,17 @@ def image_query(obs_id: str, ra: Optional[float] = None,
             ENV.MAXIMUM_CUTOUT_SIZE
         ))
 
+        # funpack before fitscut?
+        decompress: bool = False
+        extension: str = ''
+        if obs_id.startswith('urn:nasa:pds:gbo.ast.atlas.survey'):
+            decompress = True
+            extension = 'image'
+        # curiously, fitscut does not have an issue with fpacked NEAT data
+
+        if decompress:
+            source_image_path = _funpack(source_image_path, extension)
+
         cmd.extend([
             '--wcs',
             f'-x {ra}',
@@ -124,7 +139,7 @@ def image_query(obs_id: str, ra: Optional[float] = None,
         ])
 
         # attachment file name is based on coordinates and size
-        suffix = f'_{+ra:.5f}{+dec:.5f}_{size.replace(" ", "")}'
+        suffix = f'_{ra:.5f}{dec:+.5f}_{size.replace(" ", "")}'
 
     # create attachment file name
     attachment_filename: str = os.path.splitext(
@@ -151,3 +166,16 @@ Process returned: f{exc.output}''') from exc
     os.chmod(image_path, 33204)
 
     return image_path, attachment_filename
+
+
+def _funpack(filename, extension):
+    """Decompress an fpacked file and return the new file name."""
+    fd: int
+    fd, path = mkstemp(dir=ENV.SBNSIS_CUTOUT_CACHE)
+    os.close(fd)
+    os.unlink(path)  # funpack will not overwrite an existing file
+
+    cmd: List[str] = ['funpack', '-E', extension, '-O', path, filename]
+    subprocess.check_call(cmd)
+
+    return path

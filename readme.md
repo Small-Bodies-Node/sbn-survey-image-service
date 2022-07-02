@@ -74,7 +74,7 @@ python3 -m sbn_survey_image_service.data.add -r \
     /path/to/gbo.ast.neat.survey/data_geodss/g19960417/obsdata
 ```
 
-Data may be served to the image service via HTTP(S).  In this case, the `add` script must still be run on locally accessible files, but an appropriate URL may be formed using the `--base-url` and `--strip-leading` parameters:
+The previous example is for a survey accessible via the local file system.  As an alternative, data may be served to the image service via HTTP(S).  In this case, the `add` script must still be run on locally accessible labels, but an appropriate URL may be formed using the `--base-url` and `--strip-leading` parameters:
 ```
 python3 -m sbn_survey_image_service.data.add -r \
     /path/to/gbo.ast.neat.survey/data_geodss/g19960417/obsdata \

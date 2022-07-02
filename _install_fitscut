@@ -16,7 +16,7 @@ cd build
 test ! -e cfitsio-${CFITSIO_VERSION}.tar.gz && wget https://heasarc.gsfc.nasa.gov/FTP/software/fitsio/c/cfitsio-${CFITSIO_VERSION}.tar.gz
 tar xzf cfitsio-${CFITSIO_VERSION}.tar.gz
 cd cfitsio-${CFITSIO_VERSION}
-./configure --prefix=$VIRTUAL_ENV && make && make install
+./configure --prefix=$VIRTUAL_ENV && make && make funpack && make install
 cd ..
 
 # wcs tools

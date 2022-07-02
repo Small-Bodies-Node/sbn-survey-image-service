@@ -57,3 +57,7 @@ class SBNSISWarning(SBNSISException):
 
 class InvalidNEATImage(SBNSISWarning):
     """Invalid NEAT survey image."""
+
+
+class InvalidATLASImage(SBNSISWarning):
+    """Invalid NEAT survey image."""
