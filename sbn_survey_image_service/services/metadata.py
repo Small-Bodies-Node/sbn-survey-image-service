@@ -6,7 +6,7 @@ __all__ = [
     'metadata_summary'
 ]
 
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Tuple
 from .database_provider import data_provider_session, Session
 from ..models.image import Image
 
@@ -16,13 +16,17 @@ def metadata_query(collection: Optional[str] = None,
                    instrument: Optional[str] = None,
                    dptype: Optional[str] = None,
                    format: str = 'fits',
-                   maxrec: Optional[int] = None
-                   ) -> List[dict]:
+                   maxrec: int = 100,
+                   offset: int = 0,
+                   ) -> Tuple[int, List[dict]]:
     """Query database for image metadata.
 
 
     Returns
     -------
+    count : int
+        Total number of matches.
+
     matches : list
 
     """
@@ -41,8 +45,13 @@ def metadata_query(collection: Optional[str] = None,
             query = query.filter(Image.instrument == instrument)
         if dptype is not None:
             query = query.filter(Image.data_product_type == dptype)
+
+        count: int = query.count()
+
         if maxrec is not None:
             query = query.limit(maxrec)
+
+        query = query.offset(offset)
 
         # try:
         #     images: List[Image] = query.all()
@@ -64,7 +73,7 @@ def metadata_query(collection: Optional[str] = None,
                 'access_url': f'https://sbnsurveys.astro.umd.edu/images/{im.obs_id}?format={format}'
             })
 
-    return matches
+    return count, matches
 
 
 def metadata_summary() -> List[dict]:

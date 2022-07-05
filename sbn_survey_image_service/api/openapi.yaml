@@ -136,45 +136,66 @@ paths:
           schema:
             type: number
             minimum: 0
+            maximum: 1000
+            default: 100
+        - name: offset
+          in: query
+          description: Skip the first "offset" records
+          required: false
+          allowEmptyValue: false
+          schema:
+            type: number
       responses:
         "200":
-          description: Images matching query
+          description: Image metadata query results
           content:
             application/json:
               schema:
-                type: array
-                description: List of matches
-                items:
-                  type: object
-                  description: Image metadata
-                  properties:
-                    obs_id:
-                      description: Unique data product ID
-                      type: string
-                    collection:
-                      description: PDS4 collection logical identifier
-                      type: string
-                    facility:
-                      description: Observing facility name
-                      type: string
-                    instrument:
-                      description: Observing instrument name
-                      type: string
-                    dptype:
-                      description: Data product type
-                      type: string
-                    calibration_level:
-                      description: "Data calibration level (IVOA ObsCore calib_level)"
-                      type: number
-                    target:
-                      description: Intended target
-                      type: string
-                    pixel_scale:
-                      description: Image pixel scale in degrees
-                      type: number
-                    access_url:
-                      description: URL to the data product as specified by query parameter "format"
-                      type: string
+                type: object
+                properties:
+                  total:
+                    description: Total number of matches in the database
+                    type: number
+                  count:
+                    description: Number of matches returned in this request
+                    type: number
+                  offset:
+                    description: Number of matches skipped before returning records
+                    type: number
+                  results:
+                    type: array
+                    description: List of matching images
+                    items:
+                      type: object
+                      description: Image metadata
+                      properties:
+                        obs_id:
+                          description: Unique data product ID
+                          type: string
+                        collection:
+                          description: PDS4 collection logical identifier
+                          type: string
+                        facility:
+                          description: Observing facility name
+                          type: string
+                        instrument:
+                          description: Observing instrument name
+                          type: string
+                        dptype:
+                          description: Data product type
+                          type: string
+                        calibration_level:
+                          description: "Data calibration level (IVOA ObsCore calib_level)"
+                          type: number
+                        target:
+                          description: Intended target
+                          type: string
+                        pixel_scale:
+                          description: Image pixel scale in degrees
+                          type: number
+                        access_url:
+                          description: URL to the data product as specified by query parameter "format"
+                          type: string
   /summary:
     get:
       tags:

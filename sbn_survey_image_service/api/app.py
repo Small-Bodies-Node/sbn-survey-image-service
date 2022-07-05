@@ -7,7 +7,7 @@ import os
 import uuid
 import json
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 from connexion import FlaskApp
 from flask import send_file, Response
 from flask_cors import CORS
@@ -77,8 +77,9 @@ def run_query(collection: Optional[str] = None,
               instrument: Optional[str] = None,
               dptype: Optional[str] = None,
               format: str = 'fits',
-              maxrec: Optional[int] = None
-              ) -> List[dict]:
+              maxrec: int = 100,
+              offset: int = 0,
+              ) -> Dict[str, Union[int, List[dict]]]:
     """Controller for metadata queries."""
 
     logger: logging.Logger = get_logger()
@@ -90,16 +91,21 @@ def run_query(collection: Optional[str] = None,
                             'instrument': instrument,
                             'dptype': dptype,
                             'format': format,
-                            'maxrec': maxrec}))
+                            'maxrec': maxrec,
+                            'offset': offset}))
 
-    matches = metadata_query(collection=collection,
-                             facility=facility,
-                             instrument=instrument,
-                             dptype=dptype,
-                             format=format,
-                             maxrec=maxrec)
+    total, results = metadata_query(collection=collection,
+                                    facility=facility,
+                                    instrument=instrument,
+                                    dptype=dptype,
+                                    format=format,
+                                    maxrec=maxrec,
+                                    offset=offset)
 
-    return matches
+    return {'total': total,
+            'offset': offset,
+            'count': len(results),
+            'results': results}
 
 
 def get_summary():
