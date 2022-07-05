@@ -1,4 +1,4 @@
-# SBN Survey Image Service (Working Draft) v0.1.0-dev
+# SBN Survey Image Service (Working Draft) v0.2.0-dev
 
 ## Deployed Openapi Interface
 
