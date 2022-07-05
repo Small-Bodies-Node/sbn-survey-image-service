@@ -193,7 +193,7 @@ def pds4_image(label_path: str) -> Image:
         lid: str = label.find('Identification_Area/logical_identifier').text
         im: Image = Image(
             obs_id=lid,
-            collection=lid[:lid.rfind(':')],
+            collection=':'.join(lid.split(':')[:4]),
             # split and join in case of line feed characters
             facility=' '.join(label.find(
                 "Observation_Area/Observing_System/Observing_System_Component"
