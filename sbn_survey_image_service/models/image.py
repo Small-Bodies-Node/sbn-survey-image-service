@@ -20,25 +20,25 @@ class Image(Base):
 
     id: int = Column(Integer, primary_key=True)
 
-    obs_id: str = Column(String, unique=True, nullable=False)
+    obs_id: str = Column(String, unique=True, nullable=False, index=True)
     """
-        Unique data production ID
+        Unique data product ID
         
         PDS3: PRODUCT_ID
         PDS4: data product logical ID
         IVOA ObsCore: obs_id
     """
 
-    collection: str = Column(String, nullable=False)
+    collection: str = Column(String, nullable=False, index=True)
     """
         Data collection identifier.
         
-        PDS3: DATA_SET_ID
-        PDS4: data collection logical ID
+        PDS3: DATA_SET_ID?
+        PDS4: data bundle or collection logical ID (probably bundle)
         IVOA ObsCore: obs_collection.
     """
 
-    facility: str = Column(String, nullable=False)
+    facility: str = Column(String, nullable=False, index=True)
     """
         Observing facility name.
         
@@ -47,7 +47,7 @@ class Image(Base):
         IVOA ObsCore: facility_name
     """
 
-    instrument: str = Column(String, nullable=False)
+    instrument: str = Column(String, nullable=False, index=True)
     """
         Observing instrument name.
 

@@ -3,8 +3,8 @@ servers:
   - url: http://localhost:5006/
 info:
   title: SBN Survey Image Service (Working Draft)
-  version: "0.1.0-dev"
-  description: API for serving images, cutouts, and data labels from survey data provided by the NASA Planetary Data System Small Bodies Node.
+  version: "0.2.0-dev"
+  description: API for serving images, cutouts, and data labels from survey data provided by the NASA Planetary Data System Small Bodies Node.  Note that this service is more closely aligned with IVOA concepts, rather than PDS4 concepts.  (PDS4-concept supported queries will be possible in the future with the PDS4 Registry.)
 paths:
   /images/{id}:
     get:
@@ -84,3 +84,124 @@ paths:
               schema:
                 type: string
                 format: binary
+  /query:
+    get:
+      tags:
+        - Search survey metadata
+      summary: Search survey metadata
+      operationId: sbn_survey_image_service.api.app.run_query
+      parameters:
+        - name: collection
+          in: query
+          description: Query for data with this PDS4 collection logical identifier
+          required: false
+          allowEmptyValue: false
+          schema:
+            type: string
+        - name: facility
+          in: query
+          description: Query for data from this observing facility
+          required: false
+          allowEmptyValue: false
+          schema:
+            type: string
+        - name: instrument
+          in: query
+          description: Query for data from this instrument
+          required: false
+          allowEmptyValue: false
+          schema:
+            type: string
+        - name: dptype
+          in: query
+          description: Query for data with this data product type
+          required: false
+          allowEmptyValue: false
+          schema:
+            type: string
+        - name: format
+          in: query
+          description: Specify the format of the response from the access URL
+          required: false
+          allowEmptyValue: false
+          schema:
+            type: string
+            enum: [fits, jpeg, png, label]
+            default: fits
+        - name: maxrec
+          in: query
+          description: Specify the maximum number of records to return
+          required: false
+          allowEmptyValue: false
+          schema:
+            type: number
+            minimum: 0
+      responses:
+        "200":
+          description: Images matching query
+          content:
+            application/json:
+              schema:
+                type: array
+                description: List of matches
+                items:
+                  type: object
+                  description: Image metadata
+                  properties:
+                    obs_id:
+                      description: Unique data product ID
+                      type: string
+                    collection:
+                      description: PDS4 collection logical identifier
+                      type: string
+                    facility:
+                      description: Observing facility name
+                      type: string
+                    instrument:
+                      description: Observing instrument name
+                      type: string
+                    dptype:
+                      description: Data product type
+                      type: string
+                    calibration_level:
+                      description: "Data calibration level (IVOA ObsCore calib_level)"
+                      type: number
+                    target:
+                      description: Intended target
+                      type: string
+                    pixel_scale:
+                      description: Image pixel scale in degrees
+                      type: number
+                    access_url:
+                      description: URL to the data product as specified by query parameter "format"
+                      type: string
+  /summary:
+    get:
+      tags:
+        - Database summary
+      summary: Database summary, describing the collections, facilities, instruments, and number of data products.
+      operationId: sbn_survey_image_service.api.app.get_summary
+      responses:
+        "200":
+          description: Summary
+          content:
+            application/json:
+              schema:
+                type: array
+                description: List of unique collection-facility-instrument combinations.
+                items:
+                  type: object
+                  description: Collection-facility-instrument combination and number of data products.
+                  properties:
+                    collection:
+                      description: PDS4 collection logical identifier
+                      type: string
+                    facility:
+                      description: Observing facility name
+                      type: string
+                    instrument:
+                      description: Observing instrument name
+                      type: string
+                    count:
+                      description: Number of data products
+                      type: number

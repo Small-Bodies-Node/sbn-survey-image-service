@@ -7,12 +7,16 @@ import os
 import uuid
 import json
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 from connexion import FlaskApp
 from flask import send_file, Response
 from flask_cors import CORS
 from ..env import ENV
-from ..services import label_query, image_query, database_provider
+from ..services import (label_query,
+                        image_query,
+                        metadata_query,
+                        metadata_summary,
+                        database_provider)
 from ..logging import get_logger
 from ..exceptions import SBNSISException
 
@@ -34,10 +38,14 @@ def get_image(id: str, ra: Optional[float] = None, dec: Optional[float] = None,
 
     logger: logging.Logger = get_logger()
     job_id: uuid.UUID = uuid.uuid4()
-    logger.info(json.dumps({
-        'job_id': job_id.hex, 'id': id, 'ra': ra, 'dec': dec, 'size': size, 'format': format,
-        'download': download
-    }))
+    logger.info(json.dumps({'job_id': job_id.hex,
+                            'job': 'images',
+                            'id': id,
+                            'ra': ra,
+                            'dec': dec,
+                            'size': size,
+                            'format': format,
+                            'download': download}))
 
     filename: str
     attachment_filename: str
@@ -53,6 +61,7 @@ def get_image(id: str, ra: Optional[float] = None, dec: Optional[float] = None,
 
     logger.info(json.dumps({
         'job_id': job_id.hex,
+        'job': 'images',
         'filename': filename,
         'attachment_filename': attachment_filename,
         'mime_type': mime_type
@@ -63,10 +72,51 @@ def get_image(id: str, ra: Optional[float] = None, dec: Optional[float] = None,
                      attachment_filename=attachment_filename)
 
 
+def run_query(collection: Optional[str] = None,
+              facility: Optional[str] = None,
+              instrument: Optional[str] = None,
+              dptype: Optional[str] = None,
+              format: str = 'fits',
+              maxrec: Optional[int] = None
+              ) -> List[dict]:
+    """Controller for metadata queries."""
+
+    logger: logging.Logger = get_logger()
+    job_id: uuid.UUID = uuid.uuid4()
+    logger.info(json.dumps({'job_id': job_id.hex,
+                            'job': 'query',
+                            'collection': collection,
+                            'facility': facility,
+                            'instrument': instrument,
+                            'dptype': dptype,
+                            'format': format,
+                            'maxrec': maxrec}))
+
+    matches = metadata_query(collection=collection,
+                             facility=facility,
+                             instrument=instrument,
+                             dptype=dptype,
+                             format=format,
+                             maxrec=maxrec)
+
+    return matches
+
+
+def get_summary():
+    """Controller for summaries."""
+
+    logger: logging.Logger = get_logger()
+    job_id: uuid.UUID = uuid.uuid4()
+    logger.info(json.dumps({'job_id': job_id.hex}))
+
+    summary = metadata_summary()
+
+    return summary
+
+
 ###########################################
 # BEGIN API
 ###########################################
-
 
 app = FlaskApp(__name__, options={})
 app.add_api('openapi.yaml', base_path=ENV.BASE_HREF)
@@ -74,20 +124,20 @@ CORS(app.app)
 application = app.app
 
 
-@application.teardown_appcontext
+@ application.teardown_appcontext
 def shutdown_session(exception: Exception = None) -> None:
     """ Boilerplate connexion code """
     database_provider.db_session.remove()
 
 
-@application.errorhandler(SBNSISException)
+@ application.errorhandler(SBNSISException)
 def handle_sbnsis_error(error: Exception):
     """Log errors."""
     get_logger().exception('SBS Survey Image Service error.')
     return str(error), getattr(error, 'code', 500)
 
 
-@application.errorhandler(Exception)
+@ application.errorhandler(Exception)
 def handle_other_error(error: Exception):
     """Log errors."""
     get_logger().exception('An error occurred.')

@@ -90,7 +90,7 @@ def image_query(obs_id: str, ra: Optional[float] = None,
 
     # create attachment file name
     suffix: str = ''
-    if (ra is None) or (dec is None) or (size is None):
+    if not any((ra is None, dec is None, size is None)):
         # attachment file name is based on coordinates and size
         suffix = f'_{ra:.5f}{dec:+.5f}_{size.replace(" ", "")}'
 
@@ -102,7 +102,7 @@ def image_query(obs_id: str, ra: Optional[float] = None,
     # was this file already generated?  serve it!
     image_path = generate_cache_filename(im.image_url, obs_id,
                                          str(ra), str(dec),
-                                         size, format)
+                                         str(size), format)
     if os.path.exists(image_path):
         return image_path, attachment_filename
 
