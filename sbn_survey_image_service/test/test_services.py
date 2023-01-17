@@ -26,8 +26,8 @@ def dummy_data():
 
 def test_label_query():
     image_path: str
-    attachment_filename: str
-    image_path, attachment_filename = label_query('test-000023-ra')
+    download_filename: str
+    image_path, download_filename = label_query('test-000023-ra')
     assert image_path == os.path.join(
         'file://', ENV.TEST_DATA_PATH, 'test-000023-ra.lbl')
 
@@ -39,20 +39,20 @@ def test_label_query_fail():
 
 def test_image_query_full_frame_fits():
     image_path: str
-    attachment_filename: str
-    image_path, attachment_filename = image_query(
+    download_filename: str
+    image_path, download_filename = image_query(
         'test-000023-ra', format='fits')
 
     # should return path to original file
     assert image_path == os.path.join(
         ENV.TEST_DATA_PATH, 'test-000023-ra.fits')
-    assert attachment_filename == 'test-000023-ra.fits'
+    assert download_filename == 'test-000023-ra.fits'
 
 
 def test_image_query_full_frame_jpg():
     image_path: str
-    attachment_filename: str
-    image_path, attachment_filename = image_query(
+    download_filename: str
+    image_path, download_filename = image_query(
         'test-000023-ra', format='jpeg')
 
     expected_path: str = generate_cache_filename(
@@ -68,13 +68,13 @@ def test_image_query_full_frame_jpg():
     assert os.path.dirname(image_path) == os.path.abspath(
         ENV.SBNSIS_CUTOUT_CACHE)
     assert image_path == expected_path
-    assert attachment_filename == 'test-000023-ra.jpeg'
+    assert download_filename == 'test-000023-ra.jpeg'
 
 
 def test_image_query_full_frame_png():
     image_path: str
-    attachment_filename: str
-    image_path, attachment_filename = image_query(
+    download_filename: str
+    image_path, download_filename = image_query(
         'test-000023-ra', format='png')
 
     expected_path: str = generate_cache_filename(
@@ -91,7 +91,7 @@ def test_image_query_full_frame_png():
     assert os.path.dirname(image_path) == os.path.abspath(
         ENV.SBNSIS_CUTOUT_CACHE)
     assert image_path == expected_path
-    assert attachment_filename == 'test-000023-ra.png'
+    assert download_filename == 'test-000023-ra.png'
 
 
 def test_image_query_cutout():
@@ -100,8 +100,8 @@ def test_image_query_cutout():
     size: str = '1deg'
 
     image_path: str
-    attachment_filename: str
-    image_path, attachment_filename = image_query(
+    download_filename: str
+    image_path, download_filename = image_query(
         'test-000102-dec', ra=ra, dec=dec, size=size,
         format='fits')
 
@@ -119,7 +119,7 @@ def test_image_query_cutout():
     assert os.path.dirname(image_path) == os.path.abspath(
         ENV.SBNSIS_CUTOUT_CACHE)
     assert image_path == expected_path
-    assert attachment_filename == f'test-000102-dec_{+ra:.5f}{+dec:.5f}_{size.replace(" ", "")}.fits'
+    assert download_filename == f'test-000102-dec_{+ra:.5f}{+dec:.5f}_{size.replace(" ", "")}.fits'
 
     # inspect file, value should be -45 at the center
     im: np.ndarray = fits.getdata(image_path)

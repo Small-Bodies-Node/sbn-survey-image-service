@@ -1,6 +1,6 @@
 openapi: 3.0.0
 servers:
-  - url: http://localhost:5006/
+  - url: https://sbnsurveys.astro.umd.edu/api/
 info:
   title: SBN Survey Image Service (Working Draft)
   version: "0.2.0-dev"
@@ -67,7 +67,7 @@ paths:
             type: boolean
       responses:
         "200":
-          description: Data product (full-size or sub-frame) or label.
+          description: Data product (full-size or sub-frame), web preview image,  or label.
           content:
             text/plain:
               schema:

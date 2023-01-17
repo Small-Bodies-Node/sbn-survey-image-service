@@ -59,7 +59,7 @@ def image_query(obs_id: str, ra: Optional[float] = None,
     image_path : str
         Path to requested image.
 
-    attachment_filename : str
+    download_filename : str
         Suggested filename for downloads.
 
     """
@@ -94,17 +94,17 @@ def image_query(obs_id: str, ra: Optional[float] = None,
         # attachment file name is based on coordinates and size
         suffix = f'_{ra:.5f}{dec:+.5f}_{size.replace(" ", "")}'
 
-    attachment_filename: str = os.path.splitext(
+    download_filename: str = os.path.splitext(
         os.path.basename(im.image_url)
     )[0]
-    attachment_filename += f'{suffix}.{format}'
+    download_filename += f'{suffix}.{format}'
 
     # was this file already generated?  serve it!
     image_path = generate_cache_filename(im.image_url, obs_id,
                                          str(ra), str(dec),
                                          str(size), format)
     if os.path.exists(image_path):
-        return image_path, attachment_filename
+        return image_path, download_filename
 
     # otherwise, get the data and process
     source_image_path: str = url_to_local_file(im.image_url)
@@ -171,7 +171,7 @@ Process returned: f{exc.output}''') from exc
     # Out[16]: 33204
     os.chmod(image_path, 33204)
 
-    return image_path, attachment_filename
+    return image_path, download_filename
 
 
 def _funpack(filename, extension):

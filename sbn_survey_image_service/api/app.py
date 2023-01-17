@@ -48,28 +48,28 @@ def get_image(id: str, ra: Optional[float] = None, dec: Optional[float] = None,
                             'download': download}))
 
     filename: str
-    attachment_filename: str
+    download_filename: str
     if format.lower() == 'label':
-        filename, attachment_filename = label_query(id)
+        filename, download_filename = label_query(id)
     else:
-        filename, attachment_filename = image_query(
+        filename, download_filename = image_query(
             id, ra=ra, dec=dec, size=size, format=format)
 
     mime_type: str = MIME_TYPES.get(
-        os.path.splitext(attachment_filename.lower())[1],
+        os.path.splitext(download_filename.lower())[1],
         'text/plain')
 
     logger.info(json.dumps({
         'job_id': job_id.hex,
         'job': 'images',
         'filename': filename,
-        'attachment_filename': attachment_filename,
+        'download_filename': download_filename,
         'mime_type': mime_type
     }))
 
     return send_file(filename, mimetype=mime_type,
                      as_attachment=download,
-                     attachment_filename=attachment_filename)
+                     download_name=download_filename)
 
 
 def run_query(collection: Optional[str] = None,
@@ -152,4 +152,5 @@ def handle_other_error(error: Exception):
 
 
 if __name__ == '__main__':
+    print(application.url_map)
     app.run(port=ENV.API_PORT, use_reloader=False, threaded=False)
