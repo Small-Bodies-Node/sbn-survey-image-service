@@ -5,7 +5,7 @@
 # some guidance from https://github.com/spacetelescope/caldp/blob/master/scripts/caldp-install-fitscut
 
 CFITSIO_VERSION=3.49
-WCSTOOLS_VERSION=3.9.6
+WCSTOOLS_VERSION=3.9.7
 
 pushd .
 
