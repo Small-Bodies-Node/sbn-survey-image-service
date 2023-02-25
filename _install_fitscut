@@ -7,6 +7,8 @@
 CFITSIO_VERSION=3.49
 WCSTOOLS_VERSION=3.9.7
 
+command -v libtool || (echo "libtool is required to install fitscut dependencies" && exit 1)
+
 pushd .
 
 mkdir -p build
