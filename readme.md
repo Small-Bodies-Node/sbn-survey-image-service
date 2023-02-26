@@ -41,6 +41,8 @@ This repo has code for:
 - Running a flask-connexion API
 - Testing
 
+Most day-to-day tasks can be accomplished with the `_sbnsis` command.
+
 The following steps are needed to set up the code base:
 
 - The code base is operated using bash scripts that begin with the `_` underscore character
@@ -56,10 +58,10 @@ The following steps are needed to set up the code base:
       cd sbn-survey-image-service
   ```
 
-- Copy the environment variable definition template and edit to suit your needs: `cp .env-template .env`.
-- Always begin by `source _initial_setup.sh`. This will:
-  - Create/activate a python virtual environment.
-  - Install dependencies (e.g., fitscut) to the virtual env, if needed.
+- Create a new environment variable file and edit to suit your needs: `_sbnsis env`.
+- Initialize your installation with `source _initial_setup.sh`. This will:
+  - Create and activate a python virtual environment.
+  - Install dependencies (e.g., `fitscut`) to the virtual env, if needed.
   - Make available to your shell the variables `.env`.
 - Optionally test your set up:
   - Be aware that the testing suite will use the database parameters specified in the `.env` file.
@@ -102,11 +104,11 @@ Whether running in development or deployment modes, the Swagger documentation is
 
 ### Development
 
-If you have `nodemon` globally installed, then you can develop your api code and have it automatically update on changes by running `_develop_apis`. Otherwise, just run `python -m sbn_survey_image_service.api.app`.
+If you have `nodemon` globally installed, then you can develop your api code and have it automatically update on changes by running `_sbnsis start --dev_`. Otherwise, just run `python -m sbn_survey_image_service.api.app`.
 
 ### Deployment
 
-A script is supplied called `_gunicorn_manager` that takes the arguments `start|stop|status|restart` to launch the app as a background process with the gunicorn WSGI server for production serving. The number of workers is controlled with the env variable `LIVE_GUNICORN_INSTANCES`. If you have trouble getting gunicorn to work, you can run the manager with 0 as the 2nd argument to start it off in non-daemon mode.
+The `_sbnsis` takes the arguments `start|stop|status|restart` to launch the app as a background process with the gunicorn WSGI server for production serving. The number of workers is controlled with the env variable `LIVE_GUNICORN_INSTANCES`. If you have trouble getting gunicorn to work, running in non-daemon mode may help with debugging: `_sbnsis start --no-daemon`.
 
 It is recommended that you make the gunicorn-powered server accesible to the outside world by proxy-passing requests through an https-enabled web server like apache.
 
