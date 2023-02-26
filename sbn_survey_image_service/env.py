@@ -2,41 +2,61 @@
 
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import os
-from typing import Optional, List
+import inspect
+import multiprocessing
+from typing import List, Union
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv(), override=True, verbose=True)
 
 __all__: List[str] = ["ENV", "env_example"]
 
-class ENV():
-    """Class to store all env variables used in app.
-    
-    When new variables are added, also edit `env_example` below.
+
+class SBNSISEnvironment():
+    """Defines environment variables and their defaults.
+
+    To add new variables, edit this class and `env_example`.
 
     """
 
-    # String properties
-    TEST_DATA_PATH: str = os.path.abspath(str(
-        os.getenv("TEST_DATA_PATH", "./data/test")))
-    DB_HOST: str = str(os.getenv("DB_HOST", ""))
-    DB_DIALECT: str = str(os.getenv("DB_DIALECT", "sqlite"))
-    DB_USERNAME: str = str(os.getenv("DB_USERNAME", ""))
-    DB_PASSWORD: str = str(os.getenv("DB_PASSWORD", ""))
-    DB_DATABASE: str = str(os.getenv("DB_DATABASE", os.path.abspath("default.db")))
-    BASE_HREF: str = str(os.getenv("BASE_HREF", "/"))
-    SBNSIS_CUTOUT_CACHE: str = str(os.getenv("SBNSIS_CUTOUT_CACHE", "/tmp"))
-    MAXIMUM_CUTOUT_SIZE: int = int(os.getenv("MAXIMUM_CUTOUT_SIZE", 1024))
-    SBNSIS_LOG_FILE: str = str(os.path.abspath(
-        os.getenv('SBNSIS_LOG_FILE', os.path.abspath('./logging/sbnsis.log'))))
+    # Logging
+    SBNSIS_LOG_FILE: str = os.path.abspath('./logging/sbnsis.log')
 
-    # Numeric properties
-    LIVE_GUNICORN_INSTANCES: int = int(
-        os.getenv("LIVE_GUNICORN_INSTANCES", -1))
-    API_PORT: int = int(
-        os.getenv("API_PORT", 5000))
+    # Data parameters
+    TEST_DATA_PATH: str = os.path.abspath("./data/test")
+    SBNSIS_CUTOUT_CACHE: str = "/tmp"
+    MAXIMUM_CUTOUT_SIZE: int = 1024
 
-    # Boolean Properties
-    IS_DAEMON: bool = os.getenv("IS_DAEMON") == 'TRUE'
+    # Database parameters
+    DB_HOST: str = ""
+    DB_DIALECT: str = "sqlite"
+    DB_USERNAME: str = ""
+    DB_PASSWORD: str = ""
+    DB_DATABASE: str = os.path.abspath("default.db")
+
+    # Gunicorn parameters
+    LIVE_GUNICORN_INSTANCES: int = -1
+    APP_NAME: str = "sbnsis-service"
+    API_PORT: int = 5000
+    BASE_HREF: str = "/"
+    IS_DAEMON: str = "TRUE"
+
+    def __init__(self):
+        key: str
+        value: Union[str, int, None]
+        for key, value in inspect.getmembers(SBNSISEnvironment):
+            if key.startswith("_"):
+                continue
+
+            value = os.getenv(key)
+            if value is not None:
+                value_type = type(getattr(self, key))
+                setattr(self, key, value_type(value))
+
+        if self.LIVE_GUNICORN_INSTANCES < 0:
+            self.LIVE_GUNICORN_INSTANCES = multiprocessing.cpu_count() * 2
+
+
+ENV: SBNSISEnvironment = SBNSISEnvironment()
 
 
 env_example: str = f"""
@@ -59,39 +79,41 @@ env_example: str = f"""
 #   Define as needed: DB_USERNAME, DB_PASSWORD, DB_DATABASE
 #
 
-DB_DIALECT=postgresql+psycopg2
-DB_HOST=
+DB_DIALECT={SBNSISEnvironment.DB_DIALECT}
+DB_HOST={SBNSISEnvironment.DB_HOST}
 # DB_USERNAME=username
 # DB_PASSWORD=password
-DB_DATABASE=sbnsis
+DB_DATABASE={SBNSISEnvironment.DB_DATABASE}
 
 # Local cache location for served data
-SBNSIS_CUTOUT_CACHE={ENV.SBNSIS_CUTOUT_CACHE}
+SBNSIS_CUTOUT_CACHE={SBNSISEnvironment.SBNSIS_CUTOUT_CACHE}
 
 ################################
 # Editing generally not needed #
 ################################
 
 # API CONFIG
-API_PORT={ENV.API_PORT}
-BASE_HREF={ENV.BASE_HREF}
+APP_NAME={SBNSISEnvironment.APP_NAME}
+API_PORT={SBNSISEnvironment.API_PORT}
+BASE_HREF={SBNSISEnvironment.BASE_HREF}
 
 # QUERY CONFIG
 # none
 
 # Cutout CONFIG
-MAXIMUM_CUTOUT_SIZE={ENV.MAXIMUM_CUTOUT_SIZE}
+MAXIMUM_CUTOUT_SIZE={SBNSISEnvironment.MAXIMUM_CUTOUT_SIZE}
 
 # Gunicorn settings
 # if LIVE_GUNICORN_INSTANCES==-1 then it's determined by CPU count
-LIVE_GUNICORN_INSTANCES={ENV.LIVE_GUNICORN_INSTANCES}
+LIVE_GUNICORN_INSTANCES={SBNSISEnvironment.LIVE_GUNICORN_INSTANCES}
 
 # local file path for generated test data set
-TEST_DATA_PATH={ENV.TEST_DATA_PATH}
+TEST_DATA_PATH={SBNSISEnvironment.TEST_DATA_PATH}
 
 # log file
-SBNSIS_LOG_FILE={ENV.SBNSIS_LOG_FILE}
-"""
+# _sbnsis will rotate any files matching "*.log" in the ./logging directory
+SBNSIS_LOG_FILE={SBNSISEnvironment.SBNSIS_LOG_FILE}
+""".strip()
 
 
 # Debugging block

@@ -10,5 +10,5 @@ pds4_tools==1.2
 sqlalchemy==1.3.5
 python-dotenv==0.14.0
 pytest-remotedata==0.3.2
-pytest-cov
+pytest-cov==3.0
 https://github.com/mkelley/pds3/archive/v0.2.3.tar.gz#egg=pds3

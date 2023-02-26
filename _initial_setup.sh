@@ -2,7 +2,7 @@
 
 ### 0. Load vars defined in .env
 if [ ! -f $PWD/.env ]; then
-    echo -e "No .env file found!!!"
+    echo -e "No .env file found.  Generate with '_sbnsis env' then edit."
     return 1
 fi
 source .env

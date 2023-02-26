@@ -3,6 +3,8 @@
 
 """
 
+import os
+import pathlib
 import logging
 from .env import ENV
 
@@ -39,6 +41,10 @@ def setup() -> logging.Logger:
     logfile: logging.FileHandler = logging.FileHandler(ENV.SBNSIS_LOG_FILE)
     logfile.setFormatter(formatter)
     logger.addHandler(logfile)
+
+    # create log file if it does not exist
+    if not os.path.exists(ENV.SBNSIS_LOG_FILE):
+        pathlib.Path(ENV.SBNSIS_LOG_FILE).touch(mode=0o640)
 
     handler: logging.Handler
     for handler in logger.handlers:
