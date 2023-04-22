@@ -8,7 +8,9 @@ Live at the PDS [Small Bodies Node](https://sbnsurveys.astro.umd.edu/api/ui)
 
 The SBN Survey Image Service is a REST API that enables a user to retrieve archive images and cutouts thereof from the Planetary Data System's Small-Bodies Node (PDS SBN).  For example, a user may request a full-frame image from the ATLAS survey archive, or a small cutout around their object of interest.  The returned data may be in FITS, JPEG, or PNG formats.  The service can also return the image's PDS label.
 
-The data model is partially compatible with the IVOA's [Simple Image Access protocol](https://www.ivoa.net/documents/SIA/), which is based on the [ObsCore Data Model](https://www.ivoa.net/documents/ObsCore/20111028/).
+The data model is partially compatible with the IVOA's [Simple Image Access protocol](https://www.ivoa.net/documents/SIA/), which is based on the [ObsCore Data Model](https://www.ivoa.net/documents/ObsCore/20111028/).  However, this functionality is deprecated.
+
+![SBN Survey Image Service workflow](docs/SBNSIS-workflow.png)
 
 ## Code Features
 
@@ -18,17 +20,10 @@ The data model is partially compatible with the IVOA's [Simple Image Access prot
 - Gunicorn/Apache used for production deployment
 - Backed by Postgresql or Sqlite3
 
-## Development Milestones
+## Development
 
-(DRAFT)
-
-- [x] v0.1, add id, collection, facility, instrument, data product type, calibration level, target, and file paths to database; implement image service for full-frame and sub-frame images, data labels, and conversion to jpeg and png formats.
-- [ ] v0.2, search ID, COLLECTION, FACILITY, INSTRUMENT, DPTYPE, FORMAT, MAXREC
-- [ ] v0.2, add spatial and time coordinates (including exposure time) to database; implement spatial index; search POS, TIME, EXPTIME
-- [ ] v0.3, add spatial resolution and field-of-view to database; search by spatial resolution (SPATRES), field-of-view (FOV)
-- [ ] v0.4, add spectral properties to database ("energy" range and spectral resolving power); search by band (BAND), spectral resolving power (SPECRP)
-- [ ] v0.5, add polarization, and temporal resolution; search by polarization state (POL), and temporal resolution (TIMERES); allow and ignore UPLOAD
-- [ ] v0.6, implement VOSI-availability and VOSI-capabilities resources (/availability and /capabilities)
+- [ ] resolve image locations using the PSD registry
+- [ ] deploy as an AWS Lambda service?
 
 ## Requirements
 
