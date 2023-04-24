@@ -6,12 +6,13 @@ import inspect
 import multiprocessing
 from typing import List, Union
 from dotenv import load_dotenv, find_dotenv
+
 load_dotenv(find_dotenv(), override=True, verbose=True)
 
 __all__: List[str] = ["ENV", "env_example"]
 
 
-class SBNSISEnvironment():
+class SBNSISEnvironment:
     """Defines environment variables and their defaults.
 
     To add new variables, edit this class and `env_example`.
@@ -19,19 +20,18 @@ class SBNSISEnvironment():
     """
 
     # Logging
-    SBNSIS_LOG_FILE: str = os.path.abspath('./logging/sbnsis.log')
+    SBNSIS_LOG_FILE: str = os.path.abspath("./logging/sbnsis.log")
 
     # Data parameters
     TEST_DATA_PATH: str = os.path.abspath("./data/test")
     SBNSIS_CUTOUT_CACHE: str = "/tmp"
     MAXIMUM_CUTOUT_SIZE: int = 1024
 
-    # Database parameters
-    DB_HOST: str = ""
-    DB_DIALECT: str = "sqlite"
-    DB_USERNAME: str = ""
-    DB_PASSWORD: str = ""
-    DB_DATABASE: str = os.path.abspath("default.db")
+    # PDS API access point
+    PDS_REGISTRY: str = "https://pds.nasa.gov/api/search/1.0/"
+
+    # Deployment parameters
+    DEPLOYMENT: str = "AWS"
 
     # Gunicorn parameters
     LIVE_GUNICORN_INSTANCES: int = -1
@@ -66,24 +66,10 @@ env_example: str = f"""
 # Edit to suit #
 ################
 
-# DB CONFIG
-#
-# Example sqlite database:
-#   DB_DIALECT=sqlite
-#   DB_DATABASE=sbnsis.db
-# 
-# Example postgresql database:
-#   DB_DIALECT=postgresql+psycopg2
-#   DB_HOST=localhost
-#   Leave DB_HOST blank to use a UNIX socket.
-#   Define as needed: DB_USERNAME, DB_PASSWORD, DB_DATABASE
-#
+# Location of this instance: remote, AWS, or UMD
+DEPLOYMENT={SBNSISEnvironment.DEPLOYMENT}
 
-DB_DIALECT={SBNSISEnvironment.DB_DIALECT}
-DB_HOST={SBNSISEnvironment.DB_HOST}
-# DB_USERNAME=username
-# DB_PASSWORD=password
-DB_DATABASE={SBNSISEnvironment.DB_DATABASE}
+PDS_REGISTRY={SBNSISEnvironment.PDS_REGISTRY}
 
 # Local cache location for served data
 SBNSIS_CUTOUT_CACHE={SBNSISEnvironment.SBNSIS_CUTOUT_CACHE}
