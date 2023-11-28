@@ -3,7 +3,7 @@ servers:
   - url: https://sbnsurveys.astro.umd.edu/api/
 info:
   title: SBN Survey Image Service (Working Draft)
-  version: "0.2.0-dev"
+  version: "0.2.0"
   description: API for serving images, cutouts, and data labels from survey data provided by the NASA Planetary Data System Small Bodies Node.  Note that this service is more closely aligned with IVOA concepts, rather than PDS4 concepts.  (PDS4-concept supported queries will be possible in the future with the PDS4 Registry.)
 paths:
   /images/{id}:
@@ -51,7 +51,7 @@ paths:
             maximum: 90
         - name: size
           in: query
-          description: 'Cutout image size, including units. Allowed units: arcsec, arcmin, deg, degree, rad, or radian.  Maximum size is 1024 pixels.'
+          description: "Cutout image size, including units. Allowed units: arcsec, arcmin, deg, degree, rad, or radian.  Maximum size is 1024 pixels."
           example: 5arcmin
           required: false
           allowEmptyValue: false

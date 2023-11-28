@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 if __name__ == "__main__":
     setup(
         name='sbn_survey_image_service',
-        version='0.2.0-dev',
+        version='0.2.0',
         description=('SBN Survey Image Service'),
         author="Michael S. P. Kelley",
         author_email="msk@astro.umd.edu",
