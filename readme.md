@@ -8,16 +8,14 @@ Live at the PDS [Small Bodies Node](https://sbnsurveys.astro.umd.edu/api/ui)
 
 The SBN Survey Image Service is a REST API that enables a user to retrieve archive images and cutouts thereof from the Planetary Data System's Small-Bodies Node (PDS SBN). For example, a user may request a full-frame image from the ATLAS survey archive, or a small cutout around their object of interest. The returned data may be in FITS, JPEG, or PNG formats. The service can also return the image's PDS label.
 
-The data model is partially compatible with the IVOA's [Simple Image Access protocol](https://www.ivoa.net/documents/SIA/), which is based on the [ObsCore Data Model](https://www.ivoa.net/documents/ObsCore/20111028/). However, this functionality is deprecated.
-
 ![SBN Survey Image Service workflow](docs/SBNSIS-workflow.png)
 
 ## Code Features
 
 - Uses [fitscut](https://github.com/spacetelescope/fitscut) for image cutouts and JPEG/PNG generation
 - Flask API layer
-- Connexion used to generate swagger interface
-- Gunicorn/Apache used for production deployment
+- OpenAPI spec with Connexion and Swagger
+- Gunicorn for production deployment
 - Backed by Postgresql or Sqlite3
 
 ## Development
@@ -33,7 +31,7 @@ The data model is partially compatible with the IVOA's [Simple Image Access prot
 
 This repo has code for:
 
-- Running a flask-connexion API
+- Running the API
 - Testing
 
 Most day-to-day tasks can be accomplished with the `_sbnsis` command.
