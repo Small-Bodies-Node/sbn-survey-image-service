@@ -239,12 +239,12 @@ def valid_neat_image(label: ET.ElementTree) -> bool:
 def valid_atlas_image(label: ET.ElementTree) -> bool:
     """Only ingest ATLAS reduced images.
 
-    If the LID ends in _fits then it is probably what we want.
+    If the LID ends in .fits then it is probably what we want.
 
     """
 
     lid: str = label.find("Identification_Area/logical_identifier").text
-    return lid.endswith("_fits")
+    return lid.endswith(".fits")
 
 
 def add_directory(
