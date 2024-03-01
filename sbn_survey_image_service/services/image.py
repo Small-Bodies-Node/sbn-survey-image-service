@@ -163,8 +163,8 @@ def image_query(
     except subprocess.CalledProcessError as exc:
         raise FitscutError(
             f"""Error processing data.
-Command line = f{" ".join(cmd)}
-Process returned: f{exc.output}"""
+Command line = {" ".join(cmd)}
+Process returned: {exc.output}"""
         ) from exc
 
     # rw-rw-r--

@@ -51,11 +51,11 @@ The following steps are needed to set up the code base:
       cd sbn-survey-image-service
   ```
 
-- Create a new environment variable file and edit to suit your needs: `_sbnsis env`.
-- Initialize your installation with `source _initial_setup.sh`. This will:
+- Initialize your installation with `bash _initial_setup.sh`. This will:
   - Create and activate a python virtual environment.
-  - Install dependencies (e.g., `fitscut`) to the virtual env, if needed.
-  - Make available to your shell the variables `.env`.
+    - To use a specific Python interpreter, set the PYTHON environment variable: `PYTHON=/path/to/python3 bash _install_setup.sh`
+  - Install dependencies, including `fitscut`, to the virtual env.
+- Create a new environment variable file and edit to suit your needs: `_sbnsis env`.
 - Optionally test your set up:
   - Be aware that the testing suite will use the database parameters specified in the `.env` file.
     - The database user must have write permissions for testing.

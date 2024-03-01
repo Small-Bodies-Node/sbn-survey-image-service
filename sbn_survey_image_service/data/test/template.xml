@@ -1,0 +1,216 @@
+<?xml-model href="https://pds.nasa.gov/pds4/pds/v1/PDS4_PDS_1G00.sch" schematypens="http://purl.oclc.org/dsdl/schematron"?>
+<?xml-model href="https://pds.nasa.gov/pds4/img/v1/PDS4_IMG_1G00_1850.sch" schematypens="http://purl.oclc.org/dsdl/schematron"?>
+<?xml-model href="https://pds.nasa.gov/pds4/disp/v1/PDS4_DISP_1G00_1500.sch" schematypens="http://purl.oclc.org/dsdl/schematron"?>
+<?xml-model href="https://pds.nasa.gov/pds4/geom/v1/PDS4_GEOM_1G00_1920.sch" schematypens="http://purl.oclc.org/dsdl/schematron"?>
+<?xml-model href="https://pds.nasa.gov/pds4/proc/v1/PDS4_PROC_1G00_1210.sch" schematypens="http://purl.oclc.org/dsdl/schematron"?>
+<?xml-model href="https://pds.nasa.gov/pds4/survey/v1/PDS4_SURVEY_1G00_1010.sch" schematypens="http://purl.oclc.org/dsdl/schematron"?>
+<?xml-model href="https://pds.nasa.gov/pds4/survey/v1/PDS4_EBT_1G00_1000.sch" schematypens="http://purl.oclc.org/dsdl/schematron"?>
+<Product_Observational xmlns="http://pds.nasa.gov/pds4/pds/v1"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:ebt="http://pds.nasa.gov/pds4/ebt/v1"
+    xmlns:disp="http://pds.nasa.gov/pds4/disp/v1" xmlns:geom="http://pds.nasa.gov/pds4/geom/v1"
+    xmlns:img="http://pds.nasa.gov/pds4/img/v1" xmlns:proc="http://pds.nasa.gov/pds4/proc/v1"
+    xmlns:survey="http://pds.nasa.gov/pds4/survey/v1"
+    xsi:schemaLocation="http://pds.nasa.gov/pds4/pds/v1 https://pds.nasa.gov/pds4/pds/v1/PDS4_PDS_1G00.xsd
+                        http://pds.nasa.gov/pds4/img/v1 https://pds.nasa.gov/pds4/img/v1/PDS4_IMG_1G00_1850.xsd
+                        http://pds.nasa.gov/pds4/disp/v1 https://pds.nasa.gov/pds4/disp/v1/PDS4_DISP_1G00_1500.xsd
+                        http://pds.nasa.gov/pds4/geom/v1 https://pds.nasa.gov/pds4/geom/v1/PDS4_GEOM_1G00_1920.xsd
+                        http://pds.nasa.gov/pds4/proc/v1 https://pds.nasa.gov/pds4/proc/v1/PDS4_PROC_1G00_1210.xsd
+                        http://pds.nasa.gov/pds4/survey/v1 https://pds.nasa.gov/pds4/survey/v1/PDS4_SURVEY_1G00_1010.xsd
+                        http://pds.nasa.gov/pds4/ebt/v1 https://pds.nasa.gov/pds4/survey/v1/PDS4_EBT_1G00_1000.xsd">
+    <Identification_Area>
+        <logical_identifier>urn:nasa:pds:survey:test-collection:{basename}</logical_identifier>
+        <version_id>1.0</version_id>
+        <title>{filename}</title>
+        <information_model_version>1.16.0.0</information_model_version>
+        <product_class>Product_Observational</product_class>
+        <Citation_Information>
+            <author_list>Scientist, R.</author_list>
+            <publication_year>2022</publication_year>
+            <description>Incomplete label for calibrated, fully reduced, FITS image from the Survey</description>
+        </Citation_Information>
+    </Identification_Area>
+    <Observation_Area>
+        <Time_Coordinates>
+            <start_date_time>{start_time}Z</start_date_time>
+            <stop_date_time>{stop_time}Z</stop_date_time>
+        </Time_Coordinates>
+        <Primary_Result_Summary>
+            <purpose>Science</purpose>
+            <processing_level>Calibrated</processing_level>
+            <Science_Facets>
+                <wavelength_range>Visible</wavelength_range>
+                <discipline_name>Imaging</discipline_name>
+                <facet1>Grayscale</facet1>
+            </Science_Facets>
+        </Primary_Result_Summary>
+        <Investigation_Area>
+            <name>Survey</name>
+            <type>Individual Investigation</type>
+            <Internal_Reference>
+                <lid_reference>urn:nasa:pds:context:investigation:individual.survey</lid_reference>
+                <reference_type>data_to_investigation</reference_type>
+            </Internal_Reference>
+        </Investigation_Area>
+        <Observing_System>
+            <Observing_System_Component>
+                <name>Test Observatory</name>
+                <type>Host</type>
+                <Internal_Reference>
+                    <lid_reference>urn:nasa:pds:context:facility:observatory.test-observatory</lid_reference>
+                    <reference_type>is_facility</reference_type>
+                </Internal_Reference>
+            </Observing_System_Component>
+            <Observing_System_Component>
+                <name>Test Telescope</name>
+                <type>Telescope</type>
+                <Internal_Reference>
+                    <lid_reference>urn:nasa:pds:context:telescope:test-telescope</lid_reference>
+                    <reference_type>is_telescope</reference_type>
+                </Internal_Reference>
+            </Observing_System_Component>
+            <Observing_System_Component>
+                <name>Test CCD</name>
+                <type>Instrument</type>
+                <Internal_Reference>
+                    <lid_reference>urn:nasa:pds:context:instrument:test-ccd</lid_reference>
+                    <reference_type>is_instrument</reference_type>
+                </Internal_Reference>
+            </Observing_System_Component>
+        </Observing_System>
+        <Target_Identification>
+            <name>Multiple</name>
+            <type>Asteroid</type>
+        </Target_Identification>
+        <Discipline_Area>
+            <survey:Survey>
+                <survey:field_id>{field_id}</survey:field_id>
+                <survey:observation_purpose>Survey</survey:observation_purpose>
+                <survey:observation_technique>Sidereal Stare</survey:observation_technique>
+                <survey:Image_Corners>
+                    <survey:equinox>J2000</survey:equinox>
+                    <survey:Corner_Position>
+                        <survey:corner_identification>Top Left</survey:corner_identification>
+                        <survey:Coordinate>
+                            <survey:right_ascension unit="deg">{ra[0]}</survey:right_ascension>
+                            <survey:declination unit="deg">{dec[0]}</survey:declination>
+                        </survey:Coordinate>
+                    </survey:Corner_Position>
+                    <survey:Corner_Position>
+                        <survey:corner_identification>Top Right</survey:corner_identification>
+                        <survey:Coordinate>
+                            <survey:right_ascension unit="deg">{ra[1]}</survey:right_ascension>
+                            <survey:declination unit="deg">{dec[1]}</survey:declination>
+                        </survey:Coordinate>
+                    </survey:Corner_Position>
+                    <survey:Corner_Position>
+                        <survey:corner_identification>Bottom Left</survey:corner_identification>
+                        <survey:Coordinate>
+                            <survey:right_ascension unit="deg">{ra[2]}</survey:right_ascension>
+                            <survey:declination unit="deg">{dec[2]}</survey:declination>
+                        </survey:Coordinate>
+                    </survey:Corner_Position>
+                    <survey:Corner_Position>
+                        <survey:corner_identification>Bottom Right</survey:corner_identification>
+                        <survey:Coordinate>
+                            <survey:right_ascension unit="deg">{ra[3]}</survey:right_ascension>
+                            <survey:declination unit="deg">{dec[3]}</survey:declination>
+                        </survey:Coordinate>
+                    </survey:Corner_Position>
+                </survey:Image_Corners>
+                <survey:Limiting_Magnitudes>
+                    <survey:band_name>G</survey:band_name>
+                    <survey:reference_object_type>Asteroid</survey:reference_object_type>
+                    <survey:Percentage_Limit>
+                        <survey:percentage>50</survey:percentage>
+                        <survey:limiting_magnitude>21.43</survey:limiting_magnitude>
+                    </survey:Percentage_Limit>
+                    <survey:Percentage_Limit>
+                        <survey:percentage>0</survey:percentage>
+                        <survey:limiting_magnitude>22.68</survey:limiting_magnitude>
+                    </survey:Percentage_Limit>
+                </survey:Limiting_Magnitudes>
+            </survey:Survey>
+            <ebt:Earth_Based_Telescope_Parameters>
+                <ebt:Telescope_Geometry>
+                    <ebt:World_Coordinate_System>
+                        <ebt:Reference_Frame_Parameters>
+                            <ebt:wcs_axes>2</ebt:wcs_axes>
+                            <ebt:coordinate_system_equinox>2000.0</ebt:coordinate_system_equinox>
+                            <ebt:coordinate_system_celestial_pole_longitude unit="deg">180.0</ebt:coordinate_system_celestial_pole_longitude>
+                            <ebt:coordinate_system_celestial_pole_latitude unit="deg">0.0</ebt:coordinate_system_celestial_pole_latitude>
+                            <ebt:World_Axis>
+                                <ebt:axis_index>1</ebt:axis_index>
+                                <ebt:coordinate_name>Right Ascension</ebt:coordinate_name>
+                                <ebt:coordinate_system_projection>Gnomonic with polynomial
+                                    distortion</ebt:coordinate_system_projection>
+                                <ebt:world_coordinate_reference_point unit="deg">{center_ra}</ebt:world_coordinate_reference_point>
+                                <ebt:vertical_coordinate_pixel unit="pixel">{center_x}</ebt:vertical_coordinate_pixel>
+                            </ebt:World_Axis>
+                            <ebt:World_Axis>
+                                <ebt:axis_index>2</ebt:axis_index>
+                                <ebt:coordinate_name>Declination</ebt:coordinate_name>
+                                <ebt:coordinate_system_projection>Gnomonic with polynomial
+                                    distortion</ebt:coordinate_system_projection>
+                                <ebt:world_coordinate_reference_point unit="deg">{center_dec}</ebt:world_coordinate_reference_point>
+                                <ebt:horizontal_coordinate_pixel unit="pixel">{center_y}</ebt:horizontal_coordinate_pixel>
+                            </ebt:World_Axis>
+                            <ebt:Reference_Frame_Identification>
+                                <ebt:name>FK5</ebt:name>
+                            </ebt:Reference_Frame_Identification>
+                        </ebt:Reference_Frame_Parameters>
+                        <ebt:Coordinate_Frame_Transformation_Matrix>
+                            <ebt:Pixel_Axes>
+                                <ebt:horizontal_axis>1</ebt:horizontal_axis>
+                                <ebt:vertical_axis>2</ebt:vertical_axis>
+                            </ebt:Pixel_Axes>
+                            <ebt:Transformation_Element>
+                                <ebt:world_axis_index>1</ebt:world_axis_index>
+                                <ebt:pixel_axis_index>1</ebt:pixel_axis_index>
+                                <ebt:element_value>{-pixel_size}</ebt:element_value>
+                            </ebt:Transformation_Element>
+                            <ebt:Transformation_Element>
+                                <ebt:world_axis_index>1</ebt:world_axis_index>
+                                <ebt:pixel_axis_index>2</ebt:pixel_axis_index>
+                                <ebt:element_value>0</ebt:element_value>
+                            </ebt:Transformation_Element>
+                            <ebt:Transformation_Element>
+                                <ebt:world_axis_index>2</ebt:world_axis_index>
+                                <ebt:pixel_axis_index>1</ebt:pixel_axis_index>
+                                <ebt:element_value>0</ebt:element_value>
+                            </ebt:Transformation_Element>
+                            <ebt:Transformation_Element>
+                                <ebt:world_axis_index>2</ebt:world_axis_index>
+                                <ebt:pixel_axis_index>2</ebt:pixel_axis_index>
+                                <ebt:element_value>{pixel_size}</ebt:element_value>
+                            </ebt:Transformation_Element>
+                        </ebt:Coordinate_Frame_Transformation_Matrix>
+                    </ebt:World_Coordinate_System>
+                </ebt:Telescope_Geometry>
+                <ebt:Observing_Conditions>
+                    <ebt:Airmass>
+                        <ebt:airmass unit="airmass">2.125</ebt:airmass>
+                        <ebt:airmass_time>{start_time}Z</ebt:airmass_time>
+                    </ebt:Airmass>
+                </ebt:Observing_Conditions>
+            </ebt:Earth_Based_Telescope_Parameters>
+            <disp:Display_Settings>
+                <Local_Internal_Reference>
+                    <local_identifier_reference>image</local_identifier_reference>
+                    <local_reference_type>display_settings_to_array</local_reference_type>
+                </Local_Internal_Reference>
+                <disp:Display_Direction>
+                    <disp:horizontal_display_axis>Sample</disp:horizontal_display_axis>
+                    <disp:horizontal_display_direction>Left to Right</disp:horizontal_display_direction>
+                    <disp:vertical_display_axis>Line</disp:vertical_display_axis>
+                    <disp:vertical_display_direction>Top to Bottom</disp:vertical_display_direction>
+                </disp:Display_Direction>
+            </disp:Display_Settings>
+        </Discipline_Area>
+    </Observation_Area>
+    <File_Area_Observational>
+        <File>
+            <file_name>{filename}</file_name>
+        </File>
+    </File_Area_Observational>
+</Product_Observational>

@@ -75,6 +75,7 @@ def add_label(
     Returns
     -------
     success : bool
+        False, if the target already exists in the database.
 
     """
 
@@ -97,6 +98,11 @@ def add_label(
     im.image_url = _normalize_url(
         "".join((base_url, _remove_prefix(im.image_url, strip_leading)))
     )
+
+    count = session.query(Image).where(Image.obs_id == im.obs_id).count()
+    if count != 0:
+        # obs_id already exists
+        return False
 
     # add to database
     session.add(im)
@@ -136,7 +142,7 @@ def pds4_image(label_path: str) -> Image:
         lid: str = label.find("Identification_Area/logical_identifier").text
         im: Image = Image(
             obs_id=lid,
-            collection=":".join(lid.split(":")[:4]),
+            collection=":".join(lid.split(":")[:5]),
             # split and join in case of line feed characters
             facility=" ".join(
                 label.find(
@@ -264,14 +270,14 @@ def add_directory(
 
     extensions : list of strings, optional
         Files with these extensions are consdiered PDS labels.  Default:
-        .lbl, .xml.
+        .xml.
 
     **kwargs
         Keyword arguments for ``add_label``.
 
     """
 
-    extensions = [".lbl", ".xml"] if extensions is None else extensions
+    extensions = [".xml"] if extensions is None else extensions
     extensions = [x.lower() for x in extensions]
 
     logger: logging.Logger = get_logger()
@@ -293,7 +299,7 @@ def add_directory(
             break
 
     logger.info(
-        "Searched %d directories, found %d labels, %d successfully added.",
+        "Searched %d directories, found %d labels, %d processed.",
         n_dirs,
         n_files,
         n_added,
@@ -314,7 +320,7 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument(
         "-e",
         action="append",
-        default=[".lbl", ".xml"],
+        default=[".xml"],
         help=(
             "additional file name extensions to consider" " while searching directories"
         ),
