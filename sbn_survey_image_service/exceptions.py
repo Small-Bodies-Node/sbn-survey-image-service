@@ -13,6 +13,7 @@ class SBNSISException(Exception):
 
 class InvalidImageID(SBNSISException):
     """Image ID is not in database."""
+
     code = 404
 
 
@@ -22,10 +23,6 @@ class InvalidImageURL(SBNSISException):
 
 class LabelError(SBNSISException):
     """File is not a valid PDS label."""
-
-
-class PDS3LabelError(LabelError):
-    """Error while attempting to read PDS3 label."""
 
 
 class PDS4LabelError(LabelError):
@@ -38,16 +35,19 @@ class BadPixelScale(SBNSISException):
 
 class ParameterValueError(SBNSISException):
     """Parameter value error."""
+
     code = 400
 
 
 class FitscutError(SBNSISException):
     """Error processing data with fitscut."""
+
     code = 500
 
 
 class DatabaseError(SBNSISException):
     """Database error."""
+
     code = 500
 
 

@@ -15,7 +15,7 @@ paths:
       parameters:
         - name: id
           in: path
-          description: Unique image data product ID (PDS3) or logical identifier (PDS4)
+          description: Unique image data logical identifier (PDS4)
           example: urn:nasa:pds:gbo.ast.neat.survey:data_tricam:p20020222_obsdata_20020222120052c
           required: true
           allowEmptyValue: false

@@ -8,16 +8,14 @@ Live at the PDS [Small Bodies Node](https://sbnsurveys.astro.umd.edu/api/ui)
 
 The SBN Survey Image Service is a REST API that enables a user to retrieve archive images and cutouts thereof from the Planetary Data System's Small-Bodies Node (PDS SBN). For example, a user may request a full-frame image from the ATLAS survey archive, or a small cutout around their object of interest. The returned data may be in FITS, JPEG, or PNG formats. The service can also return the image's PDS label.
 
-The data model is partially compatible with the IVOA's [Simple Image Access protocol](https://www.ivoa.net/documents/SIA/), which is based on the [ObsCore Data Model](https://www.ivoa.net/documents/ObsCore/20111028/). However, this functionality is deprecated.
-
 ![SBN Survey Image Service workflow](docs/SBNSIS-workflow.png)
 
 ## Code Features
 
 - Uses [fitscut](https://github.com/spacetelescope/fitscut) for image cutouts and JPEG/PNG generation
 - Flask API layer
-- Connexion used to generate swagger interface
-- Gunicorn/Apache used for production deployment
+- OpenAPI spec with Connexion and Swagger
+- Gunicorn for production deployment
 - Backed by Postgresql or Sqlite3
 
 ## Development
@@ -33,7 +31,7 @@ The data model is partially compatible with the IVOA's [Simple Image Access prot
 
 This repo has code for:
 
-- Running a flask-connexion API
+- Running the API
 - Testing
 
 Most day-to-day tasks can be accomplished with the `_sbnsis` command.
@@ -53,11 +51,11 @@ The following steps are needed to set up the code base:
       cd sbn-survey-image-service
   ```
 
-- Create a new environment variable file and edit to suit your needs: `_sbnsis env`.
-- Initialize your installation with `source _initial_setup.sh`. This will:
+- Initialize your installation with `bash _initial_setup.sh`. This will:
   - Create and activate a python virtual environment.
-  - Install dependencies (e.g., `fitscut`) to the virtual env, if needed.
-  - Make available to your shell the variables `.env`.
+    - To use a specific Python interpreter, set the PYTHON environment variable: `PYTHON=/path/to/python3 bash _install_setup.sh`
+  - Install dependencies, including `fitscut`, to the virtual env.
+- Create a new environment variable file and edit to suit your needs: `_sbnsis env`.
 - Optionally test your set up:
   - Be aware that the testing suite will use the database parameters specified in the `.env` file.
     - The database user must have write permissions for testing.

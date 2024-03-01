@@ -16,7 +16,7 @@ class Image(Base):
     IVOA ObsCore model: https://ivoa.net/documents/ObsCore/20170509/REC-ObsCore-v1.1-20170509.pdf
     """
 
-    __tablename__ = 'image'
+    __tablename__ = "image"
 
     id: int = Column(Integer, primary_key=True)
 
@@ -24,7 +24,6 @@ class Image(Base):
     """
         Unique data product ID
         
-        PDS3: PRODUCT_ID
         PDS4: data product logical ID
         IVOA ObsCore: obs_id
     """
@@ -33,7 +32,6 @@ class Image(Base):
     """
         Data collection identifier.
         
-        PDS3: DATA_SET_ID?
         PDS4: data bundle or collection logical ID (probably bundle)
         IVOA ObsCore: obs_collection.
     """
@@ -42,7 +40,6 @@ class Image(Base):
     """
         Observing facility name.
         
-        PDS3: e.g., INSTRUMENT_HOST_NAME
         PDS4: e.g., Observing_System/Observing_System_Component/Internal_Reference/[reference_type='is_telescope']/../name
         IVOA ObsCore: facility_name
     """
@@ -51,18 +48,16 @@ class Image(Base):
     """
         Observing instrument name.
 
-        PDS3: INSTRUMENT_NAME
         PDS4: e.g., Observing_System/Observing_System_Component/Internal_Reference/[reference_type='is_instrument']/../name
         IVOA ObsCore: instrument_name
     """
 
-    data_product_type: str = Column(String, default='image', nullable=False)
+    data_product_type: str = Column(String, default="image", nullable=False)
     """
         Data product type.
 
         Likely 'image' for all data.
 
-        PDS3: ?
         PDS4: ?
         IVOA ObsCore: dataproduct_type
     """
@@ -71,7 +66,6 @@ class Image(Base):
     """
         Data calibration level.
 
-        PDS3: ?
         PDS4: Observation_Area/Primary_Result_Summary/processing_level
         IVOA ObsCore: calib_level
     """
@@ -80,7 +74,6 @@ class Image(Base):
     """
         Intended target.
 
-        PDS3: e.g., TARGET_NAME
         PDS4: Target_Identification/name
         IVOA ObsCore: target_name
     """

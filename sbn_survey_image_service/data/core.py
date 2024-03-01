@@ -1,11 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Data functions."""
 
-__all__ = [
-    'valid_pds3_label',
-    'url_to_local_file',
-    'generate_cache_filename'
-]
+__all__ = ["url_to_local_file", "generate_cache_filename"]
 
 import io
 import os
@@ -15,23 +11,6 @@ from requests.models import HTTPError
 from urllib.parse import ParseResult, urlparse
 
 from ..env import ENV
-
-
-def valid_pds3_label(filename: str) -> bool:
-    """Test that this is probably a PDS3 label."""
-
-    inf: io.IOBase
-    with open(filename, 'r', newline='\r\n') as inf:
-        # read at most 100 lines, looking for PDS_VERSION_ID
-        n: int = 0
-        line: str = ''
-        for line in inf:
-            n += 1
-            if line.strip() == '':
-                continue
-            if line.strip().replace(' ', '') == 'PDS_VERSION_ID=PDS3':
-                return True
-        return False
 
 
 def _generate_image_path(*args):
@@ -46,7 +25,7 @@ def _generate_image_path(*args):
     """
 
     m = hashlib.md5()
-    m.update(''.join(args).encode())
+    m.update("".join(args).encode())
     return os.path.join(ENV.SBNSIS_CUTOUT_CACHE, m.hexdigest())
 
 
@@ -54,7 +33,7 @@ def url_to_local_file(url: str) -> str:
     """Returns path to a local file, fetching remote files as needed."""
     path: str
     p: ParseResult = urlparse(url)
-    if p.scheme == 'file':
+    if p.scheme == "file":
         path = os.path.abspath(p.path)
     else:
         r: requests.Response = requests.get(url)
@@ -63,7 +42,7 @@ def url_to_local_file(url: str) -> str:
 
         path = generate_cache_filename(url)
         outf: io.IOBase
-        with open(path, 'wb') as outf:
+        with open(path, "wb") as outf:
             outf.write(r.content)
 
         # rw-rw-r--
@@ -86,5 +65,5 @@ def generate_cache_filename(*args):
     """
 
     m = hashlib.md5()
-    m.update(''.join(args).encode())
+    m.update("".join(args).encode())
     return os.path.join(ENV.SBNSIS_CUTOUT_CACHE, m.hexdigest())

@@ -7,21 +7,24 @@ May be run as a command-line script via python3 -m sbn_survey_image_service.data
 
 import os
 import io
-from sbn_survey_image_service.data.core import url_to_local_file
 import sys
 import logging
 import argparse
+from importlib import resources
 from typing import Any, List, Tuple
 
 import numpy as np
 from sqlalchemy.orm.session import Session
 from sqlalchemy.exc import OperationalError
 
+import astropy.units as u
 from astropy.coordinates import SkyCoord, Angle
 from astropy.io import fits
 from astropy.wcs import WCS
+from astropy.time import Time
 
 from ..add import add_directory
+from ...data.core import url_to_local_file
 from ...services.database_provider import data_provider_session, db_engine
 from ...models import Base
 from ...models.image import Image
@@ -87,7 +90,7 @@ def create_data(session, path):
     # N = int(4 * np.pi / ((3600 / 206265)**2))
     # N = 41253
 
-    logger.info('Creating ~1600 images and labels.')
+    logger.info('Creating ~400 images and labels.')
     centers: np.ndarray = np.degrees(spherical_distribution(400))
     image_size: int = 300
     pixel_size: float = np.degrees(
@@ -101,44 +104,64 @@ def create_data(session, path):
     w.wcs.pc = [[-pixel_size, 0], [0, pixel_size]]
 
     observation_number: int = 0
+    exptime: u.Quantity = 30 * u.s
+    cadence: u.Quantity = 45 * u.s
+    start_time = Time.now()
+
+    template = (resources.files("sbn_survey_image_service.data.test")
+                .joinpath("template.xml")
+                .read_text())
 
     c: np.ndarray
     for c in centers:
         w.wcs.crval = c
         coordinates: SkyCoord = w.pixel_to_world(xy[0], xy[1])
+        data = np.empty((image_size, image_size))
+        data[::2, ::2] = coordinates.ra[::2, ::2].deg
+        data[1::2, 1::2] = coordinates.dec[1::2, 1::2].deg
 
-        data: Angle
-        for data, label in zip((coordinates.ra, coordinates.dec), ('ra', 'dec')):
-            observation_number += 1
-            basename: str = f'test-{observation_number:06d}-{label}.fits'
-            image_path: str = f'{path}/{basename}'
-            label_path: str = image_path.replace('.fits', '.lbl')
+        start_time += cadence
 
-            if os.path.exists(image_path) and os.path.exists(label_path):
-                continue
+        observation_number += 1
+        basename: str = f'test-{observation_number:06d}.fits'
+        image_path: str = f'{path}/{basename}'
+        label_path: str = image_path.replace('.fits', '.xml')
 
-            hdu: fits.HDUList = fits.HDUList()
-            hdu.append(fits.PrimaryHDU(
-                data.deg.astype(np.int32),
-                header=w.to_header())
-            )
-            hdu.writeto(image_path, overwrite=True)
+        if os.path.exists(image_path) and os.path.exists(label_path):
+            continue
 
-            outf: io.IOBase
-            with open(label_path, 'w') as outf:
-                outf.write(f'''PDS_VERSION_ID                     = PDS3                                     \r
-^IMAGE                             = ("{basename}", 5)                 \r
-PRODUCT_NAME                       = "SBNSIS Test Image"                      \r
-PRODUCT_ID                         = "test-{observation_number:06d}-{label}"  \r
-DATA_SET_ID                        = "test-collection"                        \r
-INSTRUMENT_HOST_NAME               = "test-facility"                          \r
-INSTRUMENT_NAME                    = "test-instrument"                        \r
-TARGET_NAME                        = "test-target"                            \r
-OBJECT                             = IMAGE                                    \r
-  HORIZONTAL_PIXEL_FOV             = {pixel_size:.6f} <DEGREE>                        \r
-  VERTICAL_PIXEL_FOV               = {pixel_size:.6f} <DEGREE>                        \r
-END_OBJECT                         = IMAGE                                    \r
-END                                                                           ''')
+        hdu: fits.HDUList = fits.HDUList()
+        hdu.append(fits.PrimaryHDU(
+            data.astype(np.int32),
+            header=w.to_header())
+        )
+        hdu.writeto(image_path, overwrite=True)
+        outf: io.IOBase
+        with open(label_path, 'w') as outf:
+            outf.write(template.format(
+                basename=os.path.basename(label_path[:-4]),
+                filename=os.path.basename(image_path),
+                start_time=start_time.isot,
+                stop_time=(start_time + exptime).isot,
+                field_id=observation_number,
+                ra=[
+                    coordinates.ra[-1, 0],
+                    coordinates.ra[-1, -1],
+                    coordinates.ra[0, 0],
+                    coordinates.ra[0, -1],
+                ],
+                dec=[
+                    coordinates.dec[-1, 0],
+                    coordinates.dec[-1, -1],
+                    coordinates.dec[0, 0],
+                    coordinates.dec[0, -1],
+                ],
+                center_ra=w.wcs.crval[0],
+                center_dec=w.wcs.crval[1],
+                center_x=w.wcs.crpix[0],
+                center_y=w.wcs.crpix[1],
+                pixel_size=pixel_size,
+            ))
 
             if observation_number % 1000 == 0:
                 logger.info(observation_number)

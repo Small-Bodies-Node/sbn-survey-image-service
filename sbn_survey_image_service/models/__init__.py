@@ -2,6 +2,6 @@
 """SBN Survey Image Service data models."""
 
 import typing
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import declarative_base
 
 Base: typing.Any = declarative_base()

@@ -1,0 +1,47 @@
+[project]
+name = "sbn-survey-image-service"
+description = "Serves images and cutouts via REST API."
+readme = "readme.md"
+authors = [
+    { name = "Michael S. P. Kelley", email = "msk@astro.umd.edu" }
+]
+license = { text = "BSD 3-Clause License" }
+dependencies = [
+    "Flask>=3.0",
+    "Flask-Cors>=4.0",
+    "gunicorn>=21",
+    "connexion>=3.0",
+    "swagger-ui-bundle>1.0",
+    "astropy>=6.0",
+    "pds4_tools==1.3",
+    "SQLAlchemy>=2.0",
+    "python-dotenv>1.0",
+    "pytest-remotedata>=0.4",
+]
+dynamic = ["version"]
+
+[project.urls]
+homepage = "https://github.com/Small-Bodies-Node/sbn-survey-image-service"
+
+[build-system]
+requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.2"]
+build-backend = 'setuptools.build_meta'
+
+[tool.setuptools_scm]
+
+[tool.setuptools]
+zip-safe = false
+
+[tool.setuptools.packages.find]
+
+[project.optional-dependencies]
+recommended = [
+    "psycopg2-binary>=2.8",
+]
+dev = [
+    "autopep8",
+    "mypy",
+    "pycodestyle",
+    "pytest>=7.0",
+    "pytest-cov>=3.0",
+]

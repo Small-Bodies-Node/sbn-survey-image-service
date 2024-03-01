@@ -1,2 +1,3 @@
-#!/bin/bash
-./.venv/bin/python3 -m sbn_survey_image_service.scripts.sbnsis $*
+#!/usr/bin/env python3
+from sbn_survey_image_service.scripts.sbnsis import SBNSISService
+SBNSISService()
