@@ -52,6 +52,7 @@ def add_label(
     session: Session,
     base_url: str = "file://",
     strip_leading: str = "",
+    relax: bool = False,
 ) -> bool:
     """Add label and image data to database.
 
@@ -71,11 +72,13 @@ def add_label(
     strip_leading : str, optional
         Remove this leading string from the path before forming the URL.
 
+    relax : bool, optional
+        Set to ``True`` and errors will be logged, but otherwise ignored.
 
     Returns
     -------
     success : bool
-        False, if the target already exists in the database.
+        ``True``, if the label was successfully added.
 
     """
 
@@ -86,10 +89,14 @@ def add_label(
         im = pds4_image(label_path)
     except SBNSISWarning as exc:
         logger.warning(exc)
-        return False
+        if relax:
+            return False
+        raise exc
     except (LabelError, InvalidImageURL) as exc:
         logger.error(exc)
-        return False
+        if relax:
+            return False
+        raise exc
 
     # make proper URLs
     im.label_url = _normalize_url(
@@ -191,7 +198,7 @@ def pds4_image(label_path: str) -> Image:
         fz_compressed = True
         if not valid_atlas_image(label):
             raise InvalidATLASImage(
-                f"{label_path} does not appear to be an " "ATLAS prime image."
+                f"{label_path} does not appear to be an ATLAS prime image."
             )
 
     if fz_compressed:
@@ -322,7 +329,7 @@ def _parse_args() -> argparse.Namespace:
         action="append",
         default=[".xml"],
         help=(
-            "additional file name extensions to consider" " while searching directories"
+            "additional file name extensions to consider while searching directories"
         ),
     )
     parser.add_argument(
