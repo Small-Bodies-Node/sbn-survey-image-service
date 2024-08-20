@@ -1,0 +1,196 @@
+#!/usr/bin/env python3
+"""
+Identify new ATLAS data and add to the SBN SIS database.
+"""
+
+import os
+import sys
+import shlex
+import logging
+import sqlite3
+import argparse
+from glob import glob
+import logging.handlers
+from packaging.version import Version
+
+from astropy.time import Time
+import astropy.units as u
+import pds4_tools
+
+from sbn_survey_image_service.data.add import add_label
+from sbn_survey_image_service.services.database_provider import data_provider_session
+
+
+class LabelError(Exception):
+    pass
+
+
+def get_logger():
+    return logging.getLogger("SBNSIS/Add ATLAS")
+
+
+def setup_logger(args):
+    logger = get_logger()
+
+    if len(logger.handlers) > 0:
+        # already set up
+        return logger
+
+    if not os.path.exists(os.path.dirname(args.log)):
+        os.makedirs(os.path.dirname(args.log), exist_ok=True)
+
+    logger.setLevel(logging.DEBUG)
+
+    formatter = logging.Formatter("%(levelname)s:%(name)s:%(asctime)s: %(message)s")
+
+    handler = logging.StreamHandler(sys.stderr)
+    handler.setLevel(logging.DEBUG if args.verbose else logging.ERROR)
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+
+    handler = logging.FileHandler(args.log)
+    handler.setLevel(logging.DEBUG if args.verbose else logging.INFO)
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+
+    logger.info("%s", " ".join([shlex.quote(s) for s in sys.argv]))
+
+    return logger
+
+
+def collection_version(collection) -> Version:
+    """Get the collection version."""
+    is_collection = (
+        collection.label.find("Identification_Area/product_class").text
+        == "Product_Collection"
+    )
+    vid = collection.label.find("Identification_Area/version_id")
+    if not is_collection or vid is None:
+        raise LabelError("This does not appear to be a valid PDS4 label.")
+    return Version(vid.text)
+
+
+def get_lidvid(filename):
+    """Return the LIDVID and data file name."""
+    product = pds4_tools.read(filename, quiet=True, lazy_load=True)
+    lid = product.label.find("Identification_Area/logical_identifier").text
+    vid = product.label.find("Identification_Area/version_id").text
+    return "::".join((lid, vid))
+
+
+def get_image_labels(collection, data_directory) -> Version:
+    """Get the file inventory of image files to ingest.
+
+    The label file names for all LIDVIDs ending with ".fits" in the collection
+    inventory will be returned.
+
+    Candidate labels are collected from xml files within `directory`.
+
+    """
+
+    logger = get_logger()
+    files = {}
+    count = 0
+    for fn in glob(f"{data_directory}/*xml"):
+        if not fn.endswith(".fits.xml"):
+            continue
+        files[get_lidvid(fn)] = fn
+        count += 1
+        if (count % 100) == 0:
+            logger.debug("%d files read", count)
+    logger.debug("%d files read", count)
+
+    image_files = []
+    for lidvid in collection[0].data["LIDVID_LID"]:
+        lid = lidvid.split("::")[0]
+        if not lid.endswith(".fits"):
+            continue
+        if lidvid not in files:
+            raise LabelError(f"{lidvid} not found in {data_directory}")
+        image_files.append(files[lidvid])
+    return image_files
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    "database", type=os.path.normpath, help="ATLAS-PDS processing database"
+)
+mutex = parser.add_mutually_exclusive_group()
+mutex.add_argument(
+    "--since-date", type=Time, help="harvest metadata validated since this date"
+)
+mutex.add_argument(
+    "--since",
+    type=int,
+    help="harvest metadata validated in the past SINCE hours (default: 24)",
+)
+parser.add_argument(
+    "--log", default="./logging/add-atlas.log", help="log messages to this file"
+)
+parser.add_argument(
+    "--verbose", "-v", action="store_true", help="log debugging messages"
+)
+args = parser.parse_args()
+
+logger = setup_logger(args)
+
+# setup database
+try:
+    db = sqlite3.connect(f"file:{args.database}?mode=ro", uri=True)
+    db.row_factory = sqlite3.Row
+except Exception as exc:
+    logger.error("Could not connect to database %s", args.database)
+    raise exc
+
+logger.info("Connected to database %s", args.database)
+
+if args.since_date:
+    date = args.since_date
+else:
+    date = Time.now() - args.since * u.hr
+logger.info("Checking for collections validated since %s", date.iso)
+
+# check for new collections
+cursor = db.execute(
+    "SELECT * FROM nn WHERE current_status = 'validated' AND \"current_time\" > ?",
+    (date.unix,),
+)
+results = cursor.fetchall()
+
+if len(results) == 0:
+    logger.info("No new data collections found.")
+else:
+    with data_provider_session() as session:
+        for row in results:
+            collections = [
+                pds4_tools.read(fn, quiet=True)
+                for fn in glob(f"/n/{row['location']}/collection_{row['nn']}*.xml")
+            ]
+            versions = [collection_version(label) for label in collections]
+            latest = collections[versions.index(max(versions))]
+            lid = latest.label.find("Identification_Area/logical_identifier").text
+            vid = latest.label.find("Identification_Area/version_id").text
+            logger.info("Found collection %s::%s", lid, vid)
+
+            data_directory = f"/n/{row['location']}/data"
+            logger.debug(
+                "Inspecting directory %s for image products",
+                data_directory,
+            )
+            files = get_image_labels(latest, data_directory)
+            logger.info("%d image products to add", len(files))
+
+            count = 0
+            errored = 0
+            for label in files:
+                try:
+                    count += add_label(label, session)
+                except Exception as exc:
+                    errored += 1
+            logger.info(
+                "%d files added, %d files already in the database, %d files errored.",
+                count,
+                len(files) - count - errored,
+                errored,
+            )
+logger.info("Finished.")
