@@ -22,7 +22,7 @@ def setup() -> logging.Logger:
 
     """
 
-    logger: logging.Logger = logging.getLogger('SBN Survey Image Service')
+    logger: logging.Logger = logging.getLogger("SBN Survey Image Service")
 
     logger.handlers = []
 
@@ -32,7 +32,8 @@ def setup() -> logging.Logger:
     logger.handlers = []
 
     formatter: logging.Formatter = logging.Formatter(
-        '%(levelname)s %(asctime)s: %(message)s')
+        "%(levelname)s:%(name)s:%(asctime)s: %(message)s"
+    )
 
     console: logging.StreamHandler = logging.StreamHandler()
     console.setFormatter(formatter)
@@ -48,8 +49,8 @@ def setup() -> logging.Logger:
 
     handler: logging.Handler
     for handler in logger.handlers:
-        if hasattr(handler, 'baseFilename'):
-            logger.info('Logging to %s', handler.baseFilename)
+        if hasattr(handler, "baseFilename"):
+            logger.info("Logging to %s", handler.baseFilename)
 
     return logger
 
@@ -66,7 +67,7 @@ def get_logger() -> logging.Logger:
 
     """
 
-    logger: logging.Logger = logging.getLogger('SBN Survey Image Service')
+    logger: logging.Logger = logging.getLogger("SBN Survey Image Service")
 
     if len(logger.handlers) == 0:
         setup()
