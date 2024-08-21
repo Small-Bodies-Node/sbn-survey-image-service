@@ -152,7 +152,7 @@ logger.info("Checking for collections validated since %s", date.iso)
 
 # check for new collections
 cursor = db.execute(
-    "SELECT * FROM nn WHERE current_status = 'validated' AND \"current_time\" > ?",
+    "SELECT * FROM nn WHERE current_status = 'validated' AND recorded_at > ?",
     (date.unix,),
 )
 results = cursor.fetchall()
