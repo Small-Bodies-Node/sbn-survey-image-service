@@ -167,7 +167,7 @@
                             <ebt:Transformation_Element>
                                 <ebt:world_axis_index>1</ebt:world_axis_index>
                                 <ebt:pixel_axis_index>1</ebt:pixel_axis_index>
-                                <ebt:element_value>{-pixel_size}</ebt:element_value>
+                                <ebt:element_value>-{pixel_size}</ebt:element_value>
                             </ebt:Transformation_Element>
                             <ebt:Transformation_Element>
                                 <ebt:world_axis_index>1</ebt:world_axis_index>

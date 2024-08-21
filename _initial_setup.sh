@@ -75,7 +75,7 @@ if [ ! -f $PWD/.env ]; then
 To create a .env file:
 
     source .venv/bin/activate
-    _sbnsis env
+    sbnsis env
 
 Then edit .env
 ${reset_color}"""

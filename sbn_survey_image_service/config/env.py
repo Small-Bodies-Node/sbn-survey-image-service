@@ -6,12 +6,13 @@ import inspect
 import multiprocessing
 from typing import List, Union
 from dotenv import load_dotenv, find_dotenv
+
 load_dotenv(find_dotenv(), override=True, verbose=True)
 
 __all__: List[str] = ["ENV", "env_example"]
 
 
-class SBNSISEnvironment():
+class SBNSISEnvironment:
     """Defines environment variables and their defaults.
 
     To add new variables, edit this class and `env_example`.
@@ -19,7 +20,7 @@ class SBNSISEnvironment():
     """
 
     # Logging
-    SBNSIS_LOG_FILE: str = os.path.abspath('./logging/sbnsis.log')
+    SBNSIS_LOG_FILE: str = os.path.abspath("./logging/sbnsis.log")
 
     # Data parameters
     TEST_DATA_PATH: str = os.path.abspath("./data/test")
@@ -36,6 +37,7 @@ class SBNSISEnvironment():
     # Gunicorn parameters
     LIVE_GUNICORN_INSTANCES: int = -1
     APP_NAME: str = "sbnsis-service"
+    API_HOST: str = "0.0.0.0"
     API_PORT: int = 5000
     BASE_HREF: str = "/"
     IS_DAEMON: str = "TRUE"
@@ -59,7 +61,8 @@ class SBNSISEnvironment():
 ENV: SBNSISEnvironment = SBNSISEnvironment()
 
 
-env_example: str = f"""
+env_example: str = (
+    f"""
 # sbnsis configuration
 
 ################
@@ -94,6 +97,7 @@ SBNSIS_CUTOUT_CACHE={SBNSISEnvironment.SBNSIS_CUTOUT_CACHE}
 
 # API CONFIG
 APP_NAME={SBNSISEnvironment.APP_NAME}
+API_HOST={SBNSISEnvironment.API_HOST}
 API_PORT={SBNSISEnvironment.API_PORT}
 BASE_HREF={SBNSISEnvironment.BASE_HREF}
 
@@ -111,9 +115,10 @@ LIVE_GUNICORN_INSTANCES={SBNSISEnvironment.LIVE_GUNICORN_INSTANCES}
 TEST_DATA_PATH={SBNSISEnvironment.TEST_DATA_PATH}
 
 # log file
-# _sbnsis will rotate any files matching "*.log" in the ./logging directory
+# sbnsis will rotate any files matching "*.log" in the ./logging directory
 SBNSIS_LOG_FILE={SBNSISEnvironment.SBNSIS_LOG_FILE}
 """.strip()
+)
 
 
 # Debugging block

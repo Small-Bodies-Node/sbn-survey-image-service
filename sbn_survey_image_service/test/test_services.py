@@ -2,7 +2,6 @@
 """Test services using test data set."""
 
 import os
-from hashlib import md5
 import pytest
 from sqlalchemy.orm.session import Session
 import numpy as np
@@ -10,9 +9,11 @@ from astropy.io import fits
 
 from ..data.test import generate
 from ..data import generate_cache_filename
-from ..services import data_provider_session, image_query, label_query
-from ..env import ENV
-from ..exceptions import InvalidImageID, ParameterValueError
+from ..services.database_provider import data_provider_session
+from ..services.image import image_query
+from ..services.label import label_query
+from ..config.env import ENV
+from ..config.exceptions import InvalidImageID, ParameterValueError
 
 
 @pytest.fixture(autouse=True)
@@ -111,7 +112,7 @@ def test_image_query_cutout():
 
     expected_path: str = generate_cache_filename(
         "file://" + os.path.join(ENV.TEST_DATA_PATH, "test-000102.fits"),
-        "urn:nasa:pds:survey:test-collection:test-000102",        
+        "urn:nasa:pds:survey:test-collection:test-000102",
         str(ra),
         str(dec),
         str(size),

@@ -9,7 +9,7 @@ import subprocess
 from argparse import ArgumentParser
 from typing import Dict, List, Tuple
 
-from sbn_survey_image_service.env import ENV, env_example
+from sbn_survey_image_service.config.env import ENV, env_example
 
 
 class ServiceException(Exception):
@@ -48,12 +48,12 @@ class SBNSISService:
 
         if hasattr(self.args, "func"):
             try:
-                print_color('#' * 72 + "\n")
+                print_color("#" * 72 + "\n")
                 self.args.func()  # run requested function
-                print_color("\n" + '#' * 72)
+                print_color("\n" + "#" * 72)
             except ServiceException as e:
                 print_color(str(e), color=Colors.red)
-                print_color("\n" + '#' * 72)
+                print_color("\n" + "#" * 72)
                 exit(1)
         else:
             parser.print_usage()
@@ -65,8 +65,9 @@ class SBNSISService:
 
     def _get_gunicorn_processes(self) -> Tuple[int, int]:
         """Return number of running processes for this virtual environment and the parent PID."""
-        all_processes: List[str] = subprocess.check_output(
-            ["ps", "-ef"]).decode().splitlines()
+        all_processes: List[str] = (
+            subprocess.check_output(["ps", "-ef"]).decode().splitlines()
+        )
         venv: str = os.getenv("VIRTUAL_ENV")
         processes: List[str] = [
             process for process in all_processes if f"{venv}/bin/gunicorn" in process
@@ -101,7 +102,7 @@ class SBNSISService:
             "--exec",
             "python3",
             "-m",
-            "sbn_survey_image_service.api.app",
+            "sbn_survey_image_service.app",
         ]
 
         try:
@@ -112,7 +113,7 @@ class SBNSISService:
     def start_production(self) -> None:
         cmd: List[str] = [
             "gunicorn",
-            "sbn_survey_image_service.api.app:app",
+            "sbn_survey_image_service.app:app",
             "--workers",
             str(ENV.LIVE_GUNICORN_INSTANCES),
             "--bind",
@@ -157,8 +158,7 @@ class SBNSISService:
         os.kill(ppid, signal.SIGWINCH)
         ellipsis(10)
 
-        print_color("  - Stopping old service parent process",
-                    end="", flush=True)
+        print_color("  - Stopping old service parent process", end="", flush=True)
         os.kill(ppid, signal.SIGQUIT)
         ellipsis(1)
 
@@ -201,24 +201,28 @@ class SBNSISService:
         if n == 0:
             if not quiet:
                 print_color(
-                    "No sbnsis-service running from this project's virtual environment.")
+                    "No sbnsis-service running from this project's virtual environment."
+                )
             return 0, 0
 
         print_color(
-            f"sbnsis-service is running with {n - 1} workers.\nParent PID: {ppid}")
+            f"sbnsis-service is running with {n - 1} workers.\nParent PID: {ppid}"
+        )
 
         return n, ppid
 
     def rotate_logs(self) -> None:
         print_color("Rotating logs.")
-        subprocess.check_call([
-            "/usr/sbin/logrotate",
-            "--force",
-            "--state",
-            "logrotate.state",
-            "logrotate.config",
-        ],
-            cwd="logging")
+        subprocess.check_call(
+            [
+                "/usr/sbin/logrotate",
+                "--force",
+                "--state",
+                "logrotate.state",
+                "logrotate.config",
+            ],
+            cwd="logging",
+        )
 
     def env_file(self) -> None:
         if os.path.exists(".env") and not self.args.print:
@@ -233,8 +237,7 @@ class SBNSISService:
             print_color("Wrote new .env file.")
 
     def argument_parser(self) -> ArgumentParser:
-        parser: ArgumentParser = ArgumentParser(
-            description="SBN Survey Image Service")
+        parser: ArgumentParser = ArgumentParser(description="SBN Survey Image Service")
         subparsers = parser.add_subparsers(help="sub-command help")
 
         # start #########
@@ -267,23 +270,29 @@ class SBNSISService:
 
         # stop ##########
         stop_parser: ArgumentParser = subparsers.add_parser(
-            "stop", help="stop the service")
+            "stop", help="stop the service"
+        )
         stop_parser.set_defaults(func=self.stop)
 
         # rotate-logs ##########
         rotate_logs_parser: ArgumentParser = subparsers.add_parser(
-            "rotate-logs", help="force rotate logs")
+            "rotate-logs", help="force rotate logs"
+        )
         rotate_logs_parser.set_defaults(func=self.rotate_logs)
 
         # env ##########
         env_parser: ArgumentParser = subparsers.add_parser(
-            "env", help="create a new .env file")
-        env_parser.add_argument("--print", action="store_true",
-                                help="print the defaults, but do not save to .env")
+            "env", help="create a new .env file"
+        )
+        env_parser.add_argument(
+            "--print",
+            action="store_true",
+            help="print the defaults, but do not save to .env",
+        )
         env_parser.set_defaults(func=self.env_file)
 
         return parser
 
 
-if __name__ == "__main__":
+def __main__():
     SBNSISService()

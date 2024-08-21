@@ -13,8 +13,8 @@ from astropy.coordinates import Angle
 from .database_provider import data_provider_session, Session
 from ..data import url_to_local_file, generate_cache_filename
 from ..models.image import Image
-from ..exceptions import InvalidImageID, ParameterValueError, FitscutError
-from ..env import ENV
+from ..config.exceptions import InvalidImageID, ParameterValueError, FitscutError
+from ..config.env import ENV
 
 FORMATS = {"png": "--png", "jpeg": "--jpg"}
 
