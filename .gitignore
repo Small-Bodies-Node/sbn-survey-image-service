@@ -20,6 +20,7 @@ htmlcov/**
 logging/*.log
 logging/*state
 logging/old-logs
+sbn_survey_image_service/_version.py
 
 # local sqlite databases
 *.db
