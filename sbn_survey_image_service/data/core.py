@@ -10,23 +10,7 @@ import requests
 from requests.models import HTTPError
 from urllib.parse import ParseResult, urlparse
 
-from ..env import ENV
-
-
-def _generate_image_path(*args):
-    """Make consistent cutout file name based on MD5 sum of the arguments.
-
-
-    Parameters
-    ----------
-    *args : strings
-        Order is important.
-
-    """
-
-    m = hashlib.md5()
-    m.update("".join(args).encode())
-    return os.path.join(ENV.SBNSIS_CUTOUT_CACHE, m.hexdigest())
+from ..config.env import ENV
 
 
 def url_to_local_file(url: str) -> str:

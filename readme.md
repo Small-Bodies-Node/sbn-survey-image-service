@@ -34,7 +34,7 @@ This repo has code for:
 - Running the API
 - Testing
 
-Most day-to-day tasks can be accomplished with the `_sbnsis` command.
+Most day-to-day tasks can be accomplished with the `sbnsis` command.
 
 The following steps are needed to set up the code base:
 
@@ -55,7 +55,7 @@ The following steps are needed to set up the code base:
   - Create and activate a python virtual environment.
     - To use a specific Python interpreter, set the PYTHON environment variable: `PYTHON=/path/to/python3 bash _install_setup.sh`
   - Install dependencies, including `fitscut`, to the virtual env.
-- Create a new environment variable file and edit to suit your needs: `_sbnsis env`.
+- Create a new environment variable file and edit to suit your needs: `sbnsis env`.
 - Optionally test your set up:
   - Be aware that the testing suite will use the database parameters specified in the `.env` file.
     - The database user must have write permissions for testing.
@@ -69,17 +69,17 @@ The following steps are needed to set up the code base:
 
 ### Adding archival data
 
-The `sbn_survey_image_service.data.add` sub-module is used to add image metadata to the database. It scans PDS3 or PDS4 labels, and saves to the database data product metadata and URLs to the label and image data. The sub-module may be run as a command-line script `python3 -m sbn_survey_image_service.data.add`. The script will automatically create the database in case it does not exist. For example, to search a NEAT survey directory for PDS4 image labels and data, and to form URLs with which the data may be retrieved:
+The `sbn_survey_image_service.data.add` sub-module is used to add image metadata to the database. It scans PDS3 or PDS4 labels, and saves to the database data product metadata and URLs to the label and image data. The sub-module provides a command-line script `sbnsis-add`. The script will automatically create the database in case it does not exist. For example, to search a NEAT survey directory for PDS4 image labels and data, and to form URLs with which the data may be retrieved:
 
 ```
-python3 -m sbn_survey_image_service.data.add -r \
+sbnsis-add -r \
     /path/to/gbo.ast.neat.survey/data_geodss/g19960417/obsdata
 ```
 
-The previous example is for a survey accessible via the local file system. As an alternative, data may be served to the image service via HTTP(S). In this case, the `add` script must still be run on locally accessible labels, but an appropriate URL may be formed using the `--base-url` and `--strip-leading` parameters:
+The previous example is for a survey accessible via the local file system. As an alternative, data may be served to the image service via HTTP(S). In this case, the `sbnsis-add` script must still be run on locally accessible labels, but an appropriate URL may be formed using the `--base-url` and `--strip-leading` parameters:
 
 ```
-python3 -m sbn_survey_image_service.data.add -r \
+sbnsis-add -r \
     /path/to/gbo.ast.neat.survey/data_geodss/g19960417/obsdata \
     --base-url=https://sbnarchive.psi.edu/pds4/surveys \
     --strip-leading=/path/to/
@@ -87,7 +87,7 @@ python3 -m sbn_survey_image_service.data.add -r \
 
 For a summary of command-line parameters, use the `--help` option.
 
-Due to survey-to-survey label differences, it is unlikely that the script will work with a previously untested data source. Edit the appropriate functions in `sbn_survey_image_service/data/add.py`, either `pds3_image` or `pds4_image`. For example, the NEAT survey PDS4 data set v1.0 does not have pixel scale in the label, so we have hard coded it into the `pds4_image` function.
+Due to survey-to-survey label differences, it is unlikely that the script will work with a previously untested data source. Edit the appropriate functions in `sbn_survey_image_service/data/add.py`, e.g., `pds4_image()`. For example, the NEAT survey PDS4 data set v1.0 does not have pixel scale in the label, so we have hard coded it into the `pds4_image` function.
 
 It is assumed that survey images are FITS-compatible with a World Coordinate System defined for a standard sky reference frame (ICRS). The cutout service uses the FITS header, not the PDS labels, to define the sub-frame. This is a limitation from using `fitscut`.
 
@@ -97,11 +97,11 @@ Whether running in development or deployment modes, the Swagger documentation is
 
 ### Development
 
-If you have `nodemon` globally installed, then you can develop your api code and have it automatically update on changes by running `_sbnsis start --dev_`. Otherwise, just run `python -m sbn_survey_image_service.api.app`.
+If you have `nodemon` globally installed, then you can develop your api code and have it automatically update on changes by running `sbnsis start --dev_`. Otherwise, just run `python -m sbn_survey_image_service.app`.
 
 ### Deployment
 
-The `_sbnsis` takes the arguments `start|stop|status|restart` to launch the app as a background process with the gunicorn WSGI server for production serving. The number of workers is controlled with the env variable `LIVE_GUNICORN_INSTANCES`. If you have trouble getting gunicorn to work, running in non-daemon mode may help with debugging: `_sbnsis start --no-daemon`.
+The `sbnsis` takes the arguments `start|stop|status|restart` to launch the app as a background process with the gunicorn WSGI server for production serving. The number of workers is controlled with the env variable `LIVE_GUNICORN_INSTANCES`. If you have trouble getting gunicorn to work, running in non-daemon mode may help with debugging: `sbnsis start --no-daemon`.
 
 It is recommended that you make the gunicorn-powered server accesible to the outside world by proxy-passing requests through an https-enabled web server like apache.
 

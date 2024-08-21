@@ -9,14 +9,14 @@ import os
 import logging
 import argparse
 from urllib.parse import urlparse, urlunparse
-from typing import Dict, List, Optional, Union
+from typing import Dict, List
 import xml.etree.ElementTree as ET
 
 import numpy as np
 from sqlalchemy.orm.session import Session
 from pds4_tools.reader.read_label import read_label as pds4_read_label
 
-from ..exceptions import (
+from ..config.exceptions import (
     LabelError,
     InvalidNEATImage,
     InvalidATLASImage,
@@ -27,7 +27,7 @@ from ..exceptions import (
 from ..services.database_provider import data_provider_session, db_engine
 from ..models import Base
 from ..models.image import Image
-from ..logging import get_logger
+from ..config.logging import get_logger
 
 
 def _remove_prefix(s: str, prefix: str):
@@ -138,7 +138,6 @@ def pds4_image(label_path: str) -> Image:
 
     exc: Exception
     try:
-        # data: StructureList = pds4_read(label_path, lazy_load=True)
         label: ET.ElementTree = pds4_read_label(
             label_path, enforce_default_prefixes=True
         )
@@ -207,10 +206,10 @@ def pds4_image(label_path: str) -> Image:
     return im
 
 
-def pds4_pixel_scale(label: ET.ElementTree) -> Union[float, None]:
+def pds4_pixel_scale(label: ET.ElementTree) -> float | None:
     """Compute average pixel scale from Earth_Based_Telescope discipline dictionary."""
 
-    wcs: ET.ElementTree = label.find(
+    wcs: ET.ElementTree | None = label.find(
         ".//ebt:World_Coordinate_System",
         namespaces={"ebt": "http://pds.nasa.gov/pds4/ebt/v1"},
     )
@@ -258,7 +257,7 @@ def add_directory(
     path: str,
     session: Session,
     recursive: bool = False,
-    extensions: Optional[List[str]] = None,
+    extensions: List[str] | None = None,
     **kwargs,
 ) -> None:
     """Search directory for labels and add to database.
@@ -350,7 +349,7 @@ def _parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def _main() -> None:
+def __main__() -> None:
     args: argparse.Namespace = _parse_args()
 
     logger: logging.Logger = get_logger()
@@ -370,7 +369,3 @@ def _main() -> None:
                 )
             else:
                 add_label(ld, session, **kwargs)
-
-
-if __name__ == "__main__":
-    _main()

@@ -18,7 +18,7 @@ from sqlalchemy.orm.session import Session
 from sqlalchemy.exc import OperationalError
 
 import astropy.units as u
-from astropy.coordinates import SkyCoord, Angle
+from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.wcs import WCS
 from astropy.time import Time
@@ -28,7 +28,7 @@ from ...data.core import url_to_local_file
 from ...services.database_provider import data_provider_session, db_engine
 from ...models import Base
 from ...models.image import Image
-from ...env import ENV
+from ...config.env import ENV
 
 
 def spherical_distribution(N: int) -> np.ndarray:
@@ -83,23 +83,21 @@ def create_data(session, path):
 
     logger: logging.Logger = logging.getLogger(__name__)
 
-    os.system(f'mkdir -p {path}')
+    os.system(f"mkdir -p {path}")
 
     # "size" of each test image: ~10 deg
     # for 1 deg...
     # N = int(4 * np.pi / ((3600 / 206265)**2))
     # N = 41253
 
-    logger.info('Creating ~400 images and labels.')
+    logger.info("Creating ~400 images and labels.")
     centers: np.ndarray = np.degrees(spherical_distribution(400))
     image_size: int = 300
-    pixel_size: float = np.degrees(
-        np.sqrt(4 * np.pi / len(centers))
-    ) / image_size / 10
+    pixel_size: float = np.degrees(np.sqrt(4 * np.pi / len(centers))) / image_size / 10
     xy: np.ndarray = np.mgrid[:image_size, :image_size][::-1]
 
     w: WCS = WCS()
-    w.wcs.ctype = 'RA---TAN', 'DEC--TAN'
+    w.wcs.ctype = "RA---TAN", "DEC--TAN"
     w.wcs.crpix = image_size // 2, image_size // 2
     w.wcs.pc = [[-pixel_size, 0], [0, pixel_size]]
 
@@ -108,9 +106,11 @@ def create_data(session, path):
     cadence: u.Quantity = 45 * u.s
     start_time = Time.now()
 
-    template = (resources.files("sbn_survey_image_service.data.test")
-                .joinpath("template.xml")
-                .read_text())
+    template = (
+        resources.files("sbn_survey_image_service.data.test")
+        .joinpath("template.xml")
+        .read_text()
+    )
 
     c: np.ndarray
     for c in centers:
@@ -123,45 +123,44 @@ def create_data(session, path):
         start_time += cadence
 
         observation_number += 1
-        basename: str = f'test-{observation_number:06d}.fits'
-        image_path: str = f'{path}/{basename}'
-        label_path: str = image_path.replace('.fits', '.xml')
+        basename: str = f"test-{observation_number:06d}.fits"
+        image_path: str = f"{path}/{basename}"
+        label_path: str = image_path.replace(".fits", ".xml")
 
         if os.path.exists(image_path) and os.path.exists(label_path):
             continue
 
         hdu: fits.HDUList = fits.HDUList()
-        hdu.append(fits.PrimaryHDU(
-            data.astype(np.int32),
-            header=w.to_header())
-        )
+        hdu.append(fits.PrimaryHDU(data.astype(np.int32), header=w.to_header()))
         hdu.writeto(image_path, overwrite=True)
         outf: io.IOBase
-        with open(label_path, 'w') as outf:
-            outf.write(template.format(
-                basename=os.path.basename(label_path[:-4]),
-                filename=os.path.basename(image_path),
-                start_time=start_time.isot,
-                stop_time=(start_time + exptime).isot,
-                field_id=observation_number,
-                ra=[
-                    coordinates.ra[-1, 0],
-                    coordinates.ra[-1, -1],
-                    coordinates.ra[0, 0],
-                    coordinates.ra[0, -1],
-                ],
-                dec=[
-                    coordinates.dec[-1, 0],
-                    coordinates.dec[-1, -1],
-                    coordinates.dec[0, 0],
-                    coordinates.dec[0, -1],
-                ],
-                center_ra=w.wcs.crval[0],
-                center_dec=w.wcs.crval[1],
-                center_x=w.wcs.crpix[0],
-                center_y=w.wcs.crpix[1],
-                pixel_size=pixel_size,
-            ))
+        with open(label_path, "w") as outf:
+            outf.write(
+                template.format(
+                    basename=os.path.basename(label_path[:-4]),
+                    filename=os.path.basename(image_path),
+                    start_time=start_time.isot,
+                    stop_time=(start_time + exptime).isot,
+                    field_id=observation_number,
+                    ra=[
+                        coordinates.ra[-1, 0],
+                        coordinates.ra[-1, -1],
+                        coordinates.ra[0, 0],
+                        coordinates.ra[0, -1],
+                    ],
+                    dec=[
+                        coordinates.dec[-1, 0],
+                        coordinates.dec[-1, -1],
+                        coordinates.dec[0, 0],
+                        coordinates.dec[0, -1],
+                    ],
+                    center_ra=w.wcs.crval[0],
+                    center_dec=w.wcs.crval[1],
+                    center_x=w.wcs.crpix[0],
+                    center_y=w.wcs.crpix[1],
+                    pixel_size=pixel_size,
+                )
+            )
 
             if observation_number % 1000 == 0:
                 logger.info(observation_number)
@@ -169,8 +168,8 @@ def create_data(session, path):
     add_directory(ENV.TEST_DATA_PATH, session)
 
     logger.info(
-        'Created and added %d test images and their labels to the database.',
-        observation_number
+        "Created and added %d test images and their labels to the database.",
+        observation_number,
     )
 
 
@@ -182,11 +181,7 @@ def create_tables() -> None:
 def delete_data(session) -> None:
     """Delete test data from database."""
 
-    (
-        session.query(Image)
-        .filter(Image.collection == 'test-collection')
-        .delete()
-    )
+    (session.query(Image).filter(Image.collection == "test-collection").delete())
 
 
 def exists(session) -> bool:
@@ -198,9 +193,7 @@ def exists(session) -> bool:
 
     try:
         results: Any = (
-            session.query(Image)
-            .filter(Image.collection == 'test-collection')
-            .all()
+            session.query(Image).filter(Image.collection == "test-collection").all()
         )
     except OperationalError:
         return False
@@ -210,8 +203,12 @@ def exists(session) -> bool:
 
     im: Image
     for im in results:
-        if not any((os.path.exists(url_to_local_file(im.image_url)),
-                    os.path.exists(url_to_local_file(im.label_url)))):
+        if not any(
+            (
+                os.path.exists(url_to_local_file(im.image_url)),
+                os.path.exists(url_to_local_file(im.label_url)),
+            )
+        ):
             return False
 
     return True
@@ -219,19 +216,28 @@ def exists(session) -> bool:
 
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description='Add/delete test data to/from SBN Survey Image Service database.',
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+        description="Add/delete test data to/from SBN Survey Image Service database.",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
-    parser.add_argument('--path', default=ENV.TEST_DATA_PATH,
-                        help='directory to which to save test data files')
-    parser.add_argument('--add', action='store_true',
-                        help='add/create test data set')
-    parser.add_argument('--exists', action='store_true',
-                        help='test for the existence of the test data set')
-    parser.add_argument('--delete', action='store_true',
-                        help='delete test data files and database rows')
-    parser.add_argument('--no-create-tables', action='store_true',
-                        help='do not attempt to create missing database tables')
+    parser.add_argument(
+        "--path",
+        default=ENV.TEST_DATA_PATH,
+        help="directory to which to save test data files",
+    )
+    parser.add_argument("--add", action="store_true", help="add/create test data set")
+    parser.add_argument(
+        "--exists",
+        action="store_true",
+        help="test for the existence of the test data set",
+    )
+    parser.add_argument(
+        "--delete", action="store_true", help="delete test data files and database rows"
+    )
+    parser.add_argument(
+        "--no-create-tables",
+        action="store_true",
+        help="do not attempt to create missing database tables",
+    )
     args: argparse.Namespace = parser.parse_args()
 
     if len(sys.argv) == 1:
@@ -255,14 +261,13 @@ def _main() -> None:
             create_data(session, args.path)
         elif args.delete:
             delete_data(session)
-            logger.info(
-                'Database cleaned, but test files must be removed manually.')
+            logger.info("Database cleaned, but test files must be removed manually.")
         elif args.exists:
             if exists(session):
-                print('Test data set appears to be valid.')
+                print("Test data set appears to be valid.")
             else:
-                print('Test data set is broken or missing.')
+                print("Test data set is broken or missing.")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     _main()
