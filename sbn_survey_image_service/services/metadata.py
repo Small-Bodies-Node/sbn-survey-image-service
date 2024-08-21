@@ -3,9 +3,11 @@
 
 __all__ = ["metadata_query", "metadata_summary"]
 
+from urllib.parse import quote
 from typing import Any, List, Tuple
 from .database_provider import data_provider_session, Session
 from ..models.image import Image
+from ..config.env import ENV
 
 
 def metadata_query(
@@ -53,6 +55,12 @@ def metadata_query(
 
         images: List[Image] = query.all()
 
+        url_base: str = ENV.PUBLIC_URL
+        if ENV.IS_PRODUCTION.upper() != "TRUE":
+            url_base = f"http://{ENV.API_HOST}:{ENV.API_PORT}/{ENV.BASE_HREF.lstrip('/')}".rstrip(
+                "/"
+            )
+
         for im in images:
             matches.append(
                 {
@@ -64,7 +72,7 @@ def metadata_query(
                     "calibration_level": im.calibration_level,
                     "target": im.target,
                     "pixel_scale": im.pixel_scale,
-                    "access_url": f"https://sbnsurveys.astro.umd.edu/images/{im.obs_id}?format={format}",
+                    "access_url": f"{url_base}/images/{quote(im.obs_id)}?format={format}",
                 }
             )
 

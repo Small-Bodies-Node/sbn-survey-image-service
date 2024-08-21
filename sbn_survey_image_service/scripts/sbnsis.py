@@ -105,8 +105,10 @@ class SBNSISService:
             "sbn_survey_image_service.app",
         ]
 
+        env: Dict[str, str] = os.environ.copy()
+        env["IS_PRODUCTION"] = "FALSE"
         try:
-            subprocess.check_call(cmd)
+            subprocess.check_call(cmd, env=env)
         except KeyboardInterrupt:
             pass
 
@@ -127,6 +129,7 @@ class SBNSISService:
         ]
 
         env: Dict[str, str] = os.environ.copy()
+        env["IS_PRODUCTION"] = "TRUE"
         if self.args.daemon:
             env["IS_DAEMON"] = "TRUE"
             cmd += ["--daemon"]

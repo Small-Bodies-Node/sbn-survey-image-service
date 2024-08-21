@@ -4,7 +4,7 @@
 import os
 import inspect
 import multiprocessing
-from typing import List, Union
+from typing import List
 from dotenv import load_dotenv, find_dotenv
 
 load_dotenv(find_dotenv(), override=True, verbose=True)
@@ -40,11 +40,13 @@ class SBNSISEnvironment:
     API_HOST: str = "127.0.0.1"
     API_PORT: int = 5000
     BASE_HREF: str = "/"
+    PUBLIC_URL: str = "https://sbnsurveys.astro.umd.edu/api"
     IS_DAEMON: str = "TRUE"
+    IS_PRODUCTION: str = "FALSE"
 
     def __init__(self):
         key: str
-        value: Union[str, int, None]
+        value: str | int | None
         for key, value in inspect.getmembers(SBNSISEnvironment):
             if key.startswith("_"):
                 continue
@@ -101,6 +103,9 @@ API_HOST={SBNSISEnvironment.API_HOST}
 API_PORT={SBNSISEnvironment.API_PORT}
 BASE_HREF={SBNSISEnvironment.BASE_HREF}
 
+# URL used in production
+PUBLIC_URL=https://sbnsurveys.astro.umd.edu/api
+
 # QUERY CONFIG
 # none
 
@@ -119,20 +124,3 @@ TEST_DATA_PATH={SBNSISEnvironment.TEST_DATA_PATH}
 SBNSIS_LOG_FILE={SBNSISEnvironment.SBNSIS_LOG_FILE}
 """.strip()
 )
-
-
-# Debugging block
-# print("=========================")
-# print(ENV.LIVE_GUNICORN_INSTANCES)
-# print(ENV.LIVE_WORKER_INSTANCES)
-# print(ENV.DEPLOYMENT_TIER)
-# print(ENV.DB_DATABASE)
-# print(ENV.DB_PASSWORD)
-# print(ENV.DB_USERNAME)
-# print()
-# print(ENV.CATCH_LOG)
-# print(ENV.CATCH_ARCHIVE_PATH)
-# print(ENV.CATCH_CUTOUT_PATH)
-# print(ENV.CATCH_THUMBNAIL_PATH)
-# print(ENV.IS_DAEMON)
-# print("=========================")
