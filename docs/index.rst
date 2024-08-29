@@ -1,0 +1,23 @@
+.. SBN Survey Image Service documentation master file, created by
+   sphinx-quickstart on Thu Aug 29 09:53:40 2024.
+   You can adapt this file completely to your liking, but it should at least
+   contain the root `toctree` directive.
+
+SBN Survey Image Service
+========================
+
+The SBN Survey Image Service (SIS) is a REST API that enables a user to retrieve
+archive images and cutouts thereof from the Planetary Data System's Small-Bodies
+Node (PDS SBN). The returned data may be in FITS, JPEG, or PNG formats. The
+service can also return the image's PDS label.
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Contents:
+
+   install
+   adding-data
+   service
+   development
+
+.. image:: _static/SBNSIS-workflow.png

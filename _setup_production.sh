@@ -51,13 +51,16 @@ source ./.venv/bin/activate
 ### Install package dependencies for project
 
 echo -e """${green}
-===========================
-Setup dependencies and code
-===========================
+======================================
+Setup ${white}production${green} dependencies and code
+======================================
 ${reset_color}"""
 
 pip install --upgrade -q -q -q pip setuptools wheel
-pip install -e .[recommended,dev]
+
+latest=$(git describe --tags "$(git rev-list --tags --max-count=1)")
+git checkout $latest
+pip install .[recommended]
 
 if [[ ! -e $VIRTUAL_ENV/bin/fitscut ]]; then
     echo -e """${cyan}

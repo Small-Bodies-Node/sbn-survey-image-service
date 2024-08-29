@@ -64,13 +64,15 @@ def image_query(
     """
 
     if format not in ["fits", "png", "jpeg"]:
-        raise ParameterValueError("image_query format must be fits, png, or jpeg.")
+        raise ParameterValueError(
+            "image_query format must be fits, png, or jpeg.")
 
     session: Session
     exc: Exception
     with data_provider_session() as session:
         try:
-            im: Image = session.query(Image).filter(Image.obs_id == obs_id).one()
+            im: Image = session.query(Image).filter(
+                Image.obs_id == obs_id).one()
         except NoResultFound as exc:
             raise InvalidImageID("Image ID not found in database.") from exc
 
@@ -91,7 +93,8 @@ def image_query(
         # attachment file name is based on coordinates and size
         suffix = f'_{ra:.5f}{dec:+.5f}_{size.replace(" ", "")}'
 
-    download_filename: str = os.path.splitext(os.path.basename(im.image_url))[0]
+    download_filename: str = os.path.splitext(
+        os.path.basename(im.image_url))[0]
     download_filename += f"{suffix}.{format}"
 
     # was this file already generated?  serve it!
