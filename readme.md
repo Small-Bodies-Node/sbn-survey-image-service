@@ -8,7 +8,7 @@ Live at the PDS [Small Bodies Node](https://sbnsurveys.astro.umd.edu/api/ui)
 
 The SBN Survey Image Service is a REST API that enables a user to retrieve archive images and cutouts thereof from the Planetary Data System's Small-Bodies Node (PDS SBN). For example, a user may request a full-frame image from the ATLAS survey archive, or a small cutout around their object of interest. The returned data may be in FITS, JPEG, or PNG formats. The service can also return the image's PDS label.
 
-![SBN Survey Image Service workflow](docs/SBNSIS-workflow.png)
+![SBN Survey Image Service workflow](docs/_static/SBNSIS-workflow.png)
 
 ## Code Features
 
