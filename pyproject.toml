@@ -19,7 +19,8 @@ dependencies = [
 
 [project.optional-dependencies]
 recommended = ["psycopg2-binary>=2.8"]
-dev = ["autopep8", "mypy", "pycodestyle", "pytest>=7.0", "pytest-cov>=3.0"]
+dev = ["autopep8", "mypy", "pycodestyle"]
+test = ["pytest>=7.0", "pytest-cov>=3.0"]
 docs = ["sphinx", "sphinx-automodapi", "numpydoc"]
 
 [project.urls]
