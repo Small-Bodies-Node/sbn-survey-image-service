@@ -186,6 +186,7 @@ else:
                 try:
                     count += add_label(label, session)
                 except Exception as exc:
+                    logger.error(exc)
                     errored += 1
             logger.info(
                 "%d files added, %d files already in the database, %d files errored.",
