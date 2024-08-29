@@ -14,17 +14,10 @@ service can also return the image's PDS label.
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
-   installation-and-setup
+
+   install
    adding-data
    service
    development
 
 .. image:: _static/SBNSIS-workflow.png
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`

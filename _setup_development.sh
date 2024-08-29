@@ -57,7 +57,7 @@ Setup ${white}development${green} dependencies and code
 ${reset_color}"""
 
 pip install --upgrade -q -q -q pip setuptools wheel
-pip install -e .[recommended,dev,test]
+pip install -e .[recommended,dev,test,docs  ]
 
 if [[ ! -e $VIRTUAL_ENV/bin/fitscut ]]; then
     echo -e """${cyan}
