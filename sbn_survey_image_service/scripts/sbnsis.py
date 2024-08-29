@@ -163,7 +163,8 @@ class SBNSISService:
         os.kill(ppid, signal.SIGWINCH)
         ellipsis(10)
 
-        print_color("  - Stopping old service parent process", end="", flush=True)
+        print_color("  - Stopping old service parent process",
+                    end="", flush=True)
         os.kill(ppid, signal.SIGQUIT)
         ellipsis(1)
 
@@ -242,7 +243,8 @@ class SBNSISService:
             print_color("Wrote new .env file.")
 
     def argument_parser(self) -> ArgumentParser:
-        parser: ArgumentParser = ArgumentParser(description="SBN Survey Image Service")
+        parser: ArgumentParser = ArgumentParser(
+            description="SBN Survey Image Service")
         subparsers = parser.add_subparsers(help="sub-command help")
 
         # start #########
