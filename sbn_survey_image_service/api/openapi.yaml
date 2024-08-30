@@ -136,7 +136,7 @@ paths:
           required: false
           allowEmptyValue: false
           schema:
-            type: number
+            type: integer
             minimum: 0
             maximum: 1000
             default: 100
@@ -146,7 +146,7 @@ paths:
           required: false
           allowEmptyValue: false
           schema:
-            type: number
+            type: integer
       responses:
         "200":
           description: Image metadata query results
@@ -157,13 +157,13 @@ paths:
                 properties:
                   total:
                     description: Total number of matches in the database
-                    type: number
+                    type: integer
                   count:
                     description: Number of matches returned in this request
-                    type: number
+                    type: integer
                   offset:
                     description: Number of matches skipped before returning records
-                    type: number
+                    type: integer
                   results:
                     type: array
                     description: List of matching images
@@ -188,7 +188,7 @@ paths:
                           type: string
                         calibration_level:
                           description: "Data calibration level (IVOA ObsCore calib_level)"
-                          type: number
+                          type: integer
                         target:
                           description: Intended target
                           type: string
@@ -227,4 +227,4 @@ paths:
                       type: string
                     count:
                       description: Number of data products
-                      type: number
+                      type: integer
