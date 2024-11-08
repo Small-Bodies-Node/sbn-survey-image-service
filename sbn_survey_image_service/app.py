@@ -30,7 +30,7 @@ app.add_middleware(
 app.add_api(
     "openapi.yaml",
     arguments={
-        "version": version,
+        "version": str(version),
         "base_href": ENV.BASE_HREF,
     },
 )
