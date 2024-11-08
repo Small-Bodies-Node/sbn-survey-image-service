@@ -69,5 +69,4 @@ if __name__ == "__main__":
     # for development
     logger.info("Running " + ENV.APP_NAME)
     logger.info(application.url_map)
-    app.run("sbn_survey_image_service.app:app",
-            host=ENV.API_HOST, port=ENV.API_PORT)
+    app.run("sbn_survey_image_service.app:app", host=ENV.API_HOST, port=ENV.API_PORT)

@@ -69,8 +69,7 @@ class CutoutSpec:
         self.normalize()
 
         self.size: Angle = (
-            self.MINUMUM_SIZE if size is None else max(
-                self.MINUMUM_SIZE, Angle(size))
+            self.MINUMUM_SIZE if size is None else max(self.MINUMUM_SIZE, Angle(size))
         )
 
     def __str__(self) -> str:
@@ -101,7 +100,7 @@ class CutoutSpec:
             # Dec -90 to 90
             self.dec = min(max(self.dec, -90), 90)
 
-    def cutout(self, url: str, wcs_ext: int, data_ext: int, meta: dict={}) -> str:
+    def cutout(self, url: str, wcs_ext: int, data_ext: int, meta: dict = {}) -> str:
         """Generate a cutout from URL.
 
 
@@ -207,7 +206,7 @@ def filename_suffix(cutout_spec: CutoutSpec, format: ImageFormat) -> str:
     suffix: str = ""
     if not cutout_spec.full_size:
         # attachment file name is based on coordinates and size
-        suffix = f'_{cutout_spec.ra:.5f}{cutout_spec.dec:+.5f}_{cutout_spec.size}'
+        suffix = f"_{cutout_spec.ra:.5f}{cutout_spec.dec:+.5f}_{cutout_spec.size}"
 
     return f"{suffix}.{format.extension}"
 
@@ -286,8 +285,7 @@ def image_query(
     try:
         format = ImageFormat(format)
     except ValueError:
-        raise ParameterValueError(
-            "image_query format must be fits, png, or jpeg.")
+        raise ParameterValueError("image_query format must be fits, png, or jpeg.")
 
     im: Image
     session: Session
@@ -301,8 +299,7 @@ def image_query(
         session.expunge(im)
 
     # create attachment file name
-    download_filename: str = os.path.splitext(
-        os.path.basename(im.image_url))[0]
+    download_filename: str = os.path.splitext(os.path.basename(im.image_url))[0]
     download_filename += filename_suffix(cutout_spec, format)
 
     # ATLAS data and WCS are found in the first extension
@@ -314,7 +311,9 @@ def image_query(
 
     # generate the cutout, as needed
     meta = {"sis-lid": obs_id}
-    fits_image_path: str = cutout_spec.cutout(im.image_url, wcs_ext, data_ext, meta=meta)
+    fits_image_path: str = cutout_spec.cutout(
+        im.image_url, wcs_ext, data_ext, meta=meta
+    )
 
     # FITS format?  done!
     if format == ImageFormat.FITS:
@@ -322,7 +321,8 @@ def image_query(
 
     # formulate the final image file name
     image_path = generate_cache_filename(
-        im.image_url, str(cutout_spec), format.extension)
+        im.image_url, str(cutout_spec), format.extension
+    )
 
     # was this file already generated?  serve it!
     if os.path.exists(image_path):

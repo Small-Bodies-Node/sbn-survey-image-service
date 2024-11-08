@@ -32,8 +32,7 @@ def test_label_query():
     image_path, download_filename = label_query(
         "urn:nasa:pds:survey:test-collection:test-000039"
     )
-    assert image_path == os.path.join(
-        "file://", ENV.TEST_DATA_PATH, "test-000039.xml")
+    assert image_path == os.path.join("file://", ENV.TEST_DATA_PATH, "test-000039.xml")
 
 
 def test_label_query_fail():
@@ -67,8 +66,7 @@ def test_image_query_full_frame_jpg():
     )
 
     # should return a file in the cache directory
-    assert os.path.dirname(image_path) == os.path.abspath(
-        ENV.SBNSIS_CUTOUT_CACHE)
+    assert os.path.dirname(image_path) == os.path.abspath(ENV.SBNSIS_CUTOUT_CACHE)
     assert image_path == expected_path
     assert download_filename == "test-000023.jpeg"
 
@@ -87,8 +85,7 @@ def test_image_query_full_frame_png():
     )
 
     # should return a file in the cache directory
-    assert os.path.dirname(image_path) == os.path.abspath(
-        ENV.SBNSIS_CUTOUT_CACHE)
+    assert os.path.dirname(image_path) == os.path.abspath(ENV.SBNSIS_CUTOUT_CACHE)
     assert image_path == expected_path
     assert download_filename == "test-000023.png"
 
@@ -117,13 +114,9 @@ def test_image_query_cutout():
     )
 
     # should return fits file in cache directory
-    assert os.path.dirname(image_path) == os.path.abspath(
-        ENV.SBNSIS_CUTOUT_CACHE)
+    assert os.path.dirname(image_path) == os.path.abspath(ENV.SBNSIS_CUTOUT_CACHE)
     assert image_path == expected_path
-    assert (
-        download_filename
-        == f'test-000102_{+ra:.5f}{+dec:.5f}_{size}.fits'
-    )
+    assert download_filename == f"test-000102_{+ra:.5f}{+dec:.5f}_{size}.fits"
 
     # inspect file, value should be -25 at the center
     im: np.ndarray = fits.getdata(image_path)
