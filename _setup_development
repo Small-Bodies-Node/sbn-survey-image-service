@@ -59,14 +59,6 @@ ${reset_color}"""
 pip install --upgrade -q -q -q pip setuptools wheel
 pip install -e .[recommended,dev,test,docs]
 
-if [[ ! -e $VIRTUAL_ENV/bin/fitscut ]]; then
-    echo -e """${cyan}
-    Installing fitscut
-${reset_color}
-"""
-    ./_install_fitscut
-fi
-
 ### Link git pre-commit-hook script
 ln -fs $PWD/_precommit_hook $PWD/.git/hooks/pre-commit
 

@@ -10,7 +10,6 @@ The [SBN Survey Image Service](https://sbnsurveys.astro.umd.edu/api/ui) (SIS) is
 
 ## Code Features
 
-- Uses [fitscut](https://github.com/spacetelescope/fitscut) for image cutouts and JPEG/PNG generation
 - Flask API layer
 - OpenAPI spec with Connexion and Swagger
 - Gunicorn for production deployment
@@ -18,5 +17,4 @@ The [SBN Survey Image Service](https://sbnsurveys.astro.umd.edu/api/ui) (SIS) is
 
 ## Documentation
 
-Documentation is provided in the ``/docs`` directory, and at
-[readthedocs](https://sbn-survey-image-service.readthedocs.io).
+Documentation is provided in the ``/docs`` directory, and at [readthedocs](https://sbn-survey-image-service.readthedocs.io).

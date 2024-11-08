@@ -39,12 +39,6 @@ class ParameterValueError(SBNSISException):
     code = 400
 
 
-class FitscutError(SBNSISException):
-    """Error processing data with fitscut."""
-
-    code = 500
-
-
 class DatabaseError(SBNSISException):
     """Database error."""
 

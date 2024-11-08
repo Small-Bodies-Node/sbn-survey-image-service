@@ -6,6 +6,7 @@ import pytest
 from sqlalchemy.orm.session import Session
 import numpy as np
 from astropy.io import fits
+from astropy.coordinates import Angle
 
 from ..data.test import generate
 from ..data import generate_cache_filename
@@ -61,10 +62,7 @@ def test_image_query_full_frame_jpg():
 
     expected_path: str = generate_cache_filename(
         "file://" + os.path.join(ENV.TEST_DATA_PATH, "test-000023.fits"),
-        "urn:nasa:pds:survey:test-collection:test-000023",
-        "None",
-        "None",
-        "None",
+        "full_size",
         "jpeg",
     )
 
@@ -84,10 +82,7 @@ def test_image_query_full_frame_png():
 
     expected_path: str = generate_cache_filename(
         "file://" + os.path.join(ENV.TEST_DATA_PATH, "test-000023.fits"),
-        "urn:nasa:pds:survey:test-collection:test-000023",
-        "None",
-        "None",
-        "None",
+        "full_size",
         "png",
     )
 
@@ -101,7 +96,7 @@ def test_image_query_full_frame_png():
 def test_image_query_cutout():
     ra: float = 0
     dec: float = -25
-    size: str = "1deg"
+    size: str = Angle("1deg")
 
     image_path: str
     download_filename: str
@@ -115,7 +110,6 @@ def test_image_query_cutout():
 
     expected_path: str = generate_cache_filename(
         "file://" + os.path.join(ENV.TEST_DATA_PATH, "test-000102.fits"),
-        "urn:nasa:pds:survey:test-collection:test-000102",
         str(ra),
         str(dec),
         str(size),
@@ -128,7 +122,7 @@ def test_image_query_cutout():
     assert image_path == expected_path
     assert (
         download_filename
-        == f'test-000102_{+ra:.5f}{+dec:.5f}_{size.replace(" ", "")}.fits'
+        == f'test-000102_{+ra:.5f}{+dec:.5f}_{size}.fits'
     )
 
     # inspect file, value should be -25 at the center
