@@ -7,8 +7,6 @@ from importlib.metadata import version as _version, PackageNotFoundError
 # make cache directory set umask
 from .config import exceptions
 from .config import env
-from . import services
-from . import models
 
 try:
     __version__ = _version(__name__)
