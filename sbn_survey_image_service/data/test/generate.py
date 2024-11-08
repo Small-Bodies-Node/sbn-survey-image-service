@@ -183,7 +183,8 @@ def create_tables() -> None:
 def delete_data(session) -> None:
     """Delete test data from database."""
 
-    (session.query(Image).filter(Image.collection == "test-collection").delete())
+    (session.query(Image).filter(Image.collection ==
+     "urn:nasa:pds:survey:test-collection").delete())
 
 
 def exists(session) -> bool:
@@ -196,7 +197,7 @@ def exists(session) -> bool:
     try:
         results: Any = (
             session.query(Image).filter(
-                Image.collection == "test-collection").all()
+                Image.collection == "urn:nasa:pds:survey:test-collection").all()
         )
     except OperationalError:
         return False
