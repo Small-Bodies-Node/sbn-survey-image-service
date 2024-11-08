@@ -57,4 +57,4 @@ Run the `--add` option to generate the files and populate the database:
     INFO:SBN Survey Image Service:2024-11-08 09:06:47,912: Searched 1 directories, found 404 labels, 404 processed.
     INFO:__main__:Created and added 404 test images and their labels to the database.
 
-The script `_test` will run the tests with `pytest`.  Coverage reports will be saved in HTML format to `htmlcov/`.  Tests requiring network access are run by default (using the --remote-data option to pytest).  These tests require a running instance of the service populated with NEAT data set.
+The script `_test` will run the tests with `pytest`.  Coverage reports will be saved in HTML format to `htmlcov/`.  Tests requiring network access are run by default (using the --remote-data option to pytest).
