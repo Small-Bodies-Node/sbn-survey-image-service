@@ -33,7 +33,7 @@ from ..config.logging import get_logger
 def _remove_prefix(s: str, prefix: str):
     """If ``s`` starts with ``prefix`` remove it."""
     if s.startswith(prefix):
-        return s[len(prefix):]
+        return s[len(prefix) :]
     else:
         return s
 
@@ -162,8 +162,7 @@ def pds4_image(label_path: str) -> Image:
                     "/Internal_Reference/[reference_type='is_instrument']/../name"
                 ).text.split()
             ),
-            target=label.find(
-                "Observation_Area/Target_Identification/name").text,
+            target=label.find("Observation_Area/Target_Identification/name").text,
             calibration_level=PDS4CalibrationLevel[
                 label.find(
                     "Observation_Area/Primary_Result_Summary/processing_level"
@@ -300,8 +299,7 @@ def add_directory(
         for filename in filenames:
             if os.path.splitext(filename)[1].lower() in extensions:
                 n_files += 1
-                n_added += add_label(os.path.join(dirpath,
-                                     filename), session, **kwargs)
+                n_added += add_label(os.path.join(dirpath, filename), session, **kwargs)
 
         if not recursive:
             break
@@ -358,8 +356,7 @@ def __main__() -> None:
     logger.setLevel(logging.DEBUG if args.v else logging.INFO)
 
     # options to pass on to add_* functions:
-    kwargs = dict(base_url=args.base_url,
-                  strip_leading=args.strip_leading.rstrip("/"))
+    kwargs = dict(base_url=args.base_url, strip_leading=args.strip_leading.rstrip("/"))
     session: Session
     with data_provider_session() as session:
         if args.create:

@@ -93,8 +93,7 @@ def create_data(session, path):
     logger.info("Creating ~400 images and labels.")
     centers: np.ndarray = np.degrees(spherical_distribution(400))
     image_size: int = 300
-    pixel_size: float = np.degrees(
-        np.sqrt(4 * np.pi / len(centers))) / image_size / 10
+    pixel_size: float = np.degrees(np.sqrt(4 * np.pi / len(centers))) / image_size / 10
     xy: np.ndarray = np.mgrid[:image_size, :image_size][::-1]
 
     w: WCS = WCS()
@@ -132,8 +131,7 @@ def create_data(session, path):
             continue
 
         hdu: fits.HDUList = fits.HDUList()
-        hdu.append(fits.PrimaryHDU(
-            data.astype(np.int32), header=w.to_header()))
+        hdu.append(fits.PrimaryHDU(data.astype(np.int32), header=w.to_header()))
         hdu.writeto(image_path, overwrite=True)
         outf: io.IOBase
         with open(label_path, "w") as outf:
@@ -183,7 +181,11 @@ def create_tables() -> None:
 def delete_data(session) -> None:
     """Delete test data from database."""
 
-    (session.query(Image).filter(Image.collection == "test-collection").delete())
+    (
+        session.query(Image)
+        .filter(Image.collection == "urn:nasa:pds:survey:test-collection")
+        .delete()
+    )
 
 
 def exists(session) -> bool:
@@ -195,8 +197,9 @@ def exists(session) -> bool:
 
     try:
         results: Any = (
-            session.query(Image).filter(
-                Image.collection == "test-collection").all()
+            session.query(Image)
+            .filter(Image.collection == "urn:nasa:pds:survey:test-collection")
+            .all()
         )
     except OperationalError:
         return False
@@ -227,8 +230,7 @@ def _parse_args() -> argparse.Namespace:
         default=ENV.TEST_DATA_PATH,
         help="directory to which to save test data files",
     )
-    parser.add_argument("--add", action="store_true",
-                        help="add/create test data set")
+    parser.add_argument("--add", action="store_true", help="add/create test data set")
     parser.add_argument(
         "--exists",
         action="store_true",
@@ -265,8 +267,7 @@ def _main() -> None:
             create_data(session, args.path)
         elif args.delete:
             delete_data(session)
-            logger.info(
-                "Database cleaned, but test files must be removed manually.")
+            logger.info("Database cleaned, but test files must be removed manually.")
         elif args.exists:
             if exists(session):
                 print("Test data set appears to be valid.")

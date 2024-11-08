@@ -62,14 +62,6 @@ latest=$(git describe --tags "$(git rev-list --tags --max-count=1)")
 git checkout $latest
 pip install .[recommended]
 
-if [[ ! -e $VIRTUAL_ENV/bin/fitscut ]]; then
-    echo -e """${cyan}
-    Installing fitscut
-${reset_color}
-"""
-    ./_install_fitscut
-fi
-
 ### Link git pre-commit-hook script
 ln -fs $PWD/_precommit_hook $PWD/.git/hooks/pre-commit
 

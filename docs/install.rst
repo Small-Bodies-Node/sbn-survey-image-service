@@ -1,20 +1,27 @@
 Installation and Setup
 ======================
 
-Select and install your choice of database backend, either sqlite3 or
-postgresql.  If using postgresql, it is recommended to have two separate users
-with access: one that can perform database maintenance (e.g., INSERT and UPDATE
-permissions), and another that will be limited to read-only access.
+Select and install your choice of database backend, either sqlite3 or postgresql.  If using postgresql, it is recommended to have two separate users with access: one that can perform database maintenance (e.g., INSERT and UPDATE permissions), and another that will be limited to read-only access.
 
 
 Requirements
 ------------
 
-All python requirements are managed by the pyproject.toml file and automatically
-installed with pip below.  In addition,
-[libtool](https://www.gnu.org/software/libtool/) and fitscut are needed.  Follow
-your typical system installation instructions for libtool.  The installation of
-fitscut is described below.
+All Python requirements are managed by the pyproject.toml file and automatically
+installed with pip below.  Major Python dependencies are:
+
+* astropy
+* connexion
+* gunicorn
+* pds4_tools
+* Pillow
+* requests
+* SQLAlchemy
+
+Other dependencies:
+
+* logrotate
+* nodemon - for running in development mode
 
 
 SBN SIS
@@ -46,18 +53,6 @@ dependencies:
    source .venv/bin/activate
    python3 -m pip install -U pip setuptools wheel
    pip install .[recommended]
-
-
-fitscut
--------
-
-The SIS uses the fitscut utility for generating cutouts and web (e.g., JPEG)
-images.  Build and install it to the virtual environment.  There is a bash
-script that can do this automatically for you:
-
-.. code:: bash
-
-   bash _install_fitscut
 
 
 SIS configuration

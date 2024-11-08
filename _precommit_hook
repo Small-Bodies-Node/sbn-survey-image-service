@@ -14,6 +14,5 @@ if [ $DONT_FORMAT_ON_CODE_COMMIT ]; then
     """
 else
     # Auto-format all python scripts
-    .venv/bin/autopep8 -ir sbn_survey_image_service/**
-    .venv/bin/autopep8 -ir tests/**
+    .venv/bin/black sbn_survey_image_service/**
 fi

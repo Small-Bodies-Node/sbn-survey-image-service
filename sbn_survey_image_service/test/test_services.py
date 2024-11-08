@@ -6,6 +6,7 @@ import pytest
 from sqlalchemy.orm.session import Session
 import numpy as np
 from astropy.io import fits
+from astropy.coordinates import Angle
 
 from ..data.test import generate
 from ..data import generate_cache_filename
@@ -31,8 +32,7 @@ def test_label_query():
     image_path, download_filename = label_query(
         "urn:nasa:pds:survey:test-collection:test-000039"
     )
-    assert image_path == os.path.join(
-        "file://", ENV.TEST_DATA_PATH, "test-000039.xml")
+    assert image_path == os.path.join("file://", ENV.TEST_DATA_PATH, "test-000039.xml")
 
 
 def test_label_query_fail():
@@ -61,16 +61,12 @@ def test_image_query_full_frame_jpg():
 
     expected_path: str = generate_cache_filename(
         "file://" + os.path.join(ENV.TEST_DATA_PATH, "test-000023.fits"),
-        "urn:nasa:pds:survey:test-collection:test-000023",
-        "None",
-        "None",
-        "None",
+        "full_size",
         "jpeg",
     )
 
     # should return a file in the cache directory
-    assert os.path.dirname(image_path) == os.path.abspath(
-        ENV.SBNSIS_CUTOUT_CACHE)
+    assert os.path.dirname(image_path) == os.path.abspath(ENV.SBNSIS_CUTOUT_CACHE)
     assert image_path == expected_path
     assert download_filename == "test-000023.jpeg"
 
@@ -84,16 +80,12 @@ def test_image_query_full_frame_png():
 
     expected_path: str = generate_cache_filename(
         "file://" + os.path.join(ENV.TEST_DATA_PATH, "test-000023.fits"),
-        "urn:nasa:pds:survey:test-collection:test-000023",
-        "None",
-        "None",
-        "None",
+        "full_size",
         "png",
     )
 
     # should return a file in the cache directory
-    assert os.path.dirname(image_path) == os.path.abspath(
-        ENV.SBNSIS_CUTOUT_CACHE)
+    assert os.path.dirname(image_path) == os.path.abspath(ENV.SBNSIS_CUTOUT_CACHE)
     assert image_path == expected_path
     assert download_filename == "test-000023.png"
 
@@ -101,7 +93,7 @@ def test_image_query_full_frame_png():
 def test_image_query_cutout():
     ra: float = 0
     dec: float = -25
-    size: str = "1deg"
+    size: str = Angle("1deg")
 
     image_path: str
     download_filename: str
@@ -115,7 +107,6 @@ def test_image_query_cutout():
 
     expected_path: str = generate_cache_filename(
         "file://" + os.path.join(ENV.TEST_DATA_PATH, "test-000102.fits"),
-        "urn:nasa:pds:survey:test-collection:test-000102",
         str(ra),
         str(dec),
         str(size),
@@ -123,13 +114,9 @@ def test_image_query_cutout():
     )
 
     # should return fits file in cache directory
-    assert os.path.dirname(image_path) == os.path.abspath(
-        ENV.SBNSIS_CUTOUT_CACHE)
+    assert os.path.dirname(image_path) == os.path.abspath(ENV.SBNSIS_CUTOUT_CACHE)
     assert image_path == expected_path
-    assert (
-        download_filename
-        == f'test-000102_{+ra:.5f}{+dec:.5f}_{size.replace(" ", "")}.fits'
-    )
+    assert download_filename == f"test-000102_{+ra:.5f}{+dec:.5f}_{size}.fits"
 
     # inspect file, value should be -25 at the center
     im: np.ndarray = fits.getdata(image_path)

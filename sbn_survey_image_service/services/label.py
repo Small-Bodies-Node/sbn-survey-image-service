@@ -21,8 +21,7 @@ def label_query(obs_id: str) -> Tuple[str, str]:
         exc: Exception
         try:
             label_url: str = (
-                session.query(Image.label_url).filter(
-                    Image.obs_id == obs_id).one()[0]
+                session.query(Image.label_url).filter(Image.obs_id == obs_id).one()[0]
             )
         except NoResultFound as exc:
             raise InvalidImageID("Image ID not found in database.") from exc

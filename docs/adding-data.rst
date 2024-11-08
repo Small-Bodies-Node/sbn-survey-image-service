@@ -74,12 +74,10 @@ in ``sbn_survey_image_service/data/add.py``, e.g., ``pds4_image()``. For
 example, the NEAT survey PDS4 data set v1.0 does not have pixel scale in the
 label, so we have hard coded it into the ``pds4_image`` function.
 
-
-Caveats
--------
-
 It is assumed that survey images are FITS-compatible with a World Coordinate
-System defined for a standard sky reference frame (ICRS). The cutout service
-uses the FITS header, not the PDS labels, to define the sub-frame. This is a
-limitation from using fitscut.  **fitscut is planned to be replaced in a future
-version** to better support metadata sourced from the PDS labels.
+System defined for a standard sky reference frame (ICRS).
+   
+.. attention::
+
+   The cutout service uses the FITS header, not the PDS labels, to define the sub-frame. Sourcing the
+   WCS from the labels will be addressed in a future version.
