@@ -100,12 +100,17 @@ class CutoutSpec:
             # Dec -90 to 90
             self.dec = min(max(self.dec, -90), 90)
 
-    def cutout(self, url: str, wcs_ext: int, data_ext: int, meta: dict = {}) -> str:
+    def cutout(
+        self, obs_id: str, url: str, wcs_ext: int, data_ext: int, meta: dict = {}
+    ) -> str:
         """Generate a cutout from URL.
 
 
         Parameters
         ----------
+        obs_id : str
+            Database observation ID, i.e., PDS4 logical identifier (LID).
+
         url : str
             The URL to the full-size image.
 
@@ -156,7 +161,27 @@ class CutoutSpec:
                 warnings.simplefilter(
                     "ignore", (fits.verify.VerifyWarning, FITSFixedWarning)
                 )
-                wcs = WCS(wcs_header)
+
+                # XPIXELSZ and YPIXELSZ cause wcslib to look for DSS distortion
+                # keywords.  This causes failures for NEAT data.
+                try:
+                    wcs = WCS(wcs_header)
+                except ValueError:
+                    # try to fix the header
+                    retry = False
+
+                    if "XPIXELSZ" in wcs_header:
+                        retry = True
+                        del wcs_header["XPIXELSZ"]
+
+                    if "YPIXELSZ" in wcs_header:
+                        retry = True
+                        del wcs_header["YPIXELSZ"]
+
+                    if retry:
+                        wcs = WCS(wcs_header)
+                    else:
+                        raise
 
             cutout: Cutout2D = Cutout2D(
                 data[data_ext].section, self.coords, self.size, wcs=wcs
@@ -168,6 +193,7 @@ class CutoutSpec:
             header.add_comment("NASA Planetary Data System Small-Bodies Node")
             header.add_comment(f"version {sis_version}")
             header.add_comment(f"date {Time.now().iso}")
+            header["sis-oid"] = obs_id, "observation ID"
             header["sis-ra"] = self.ra, "cutout center RA (deg)"
             header["sis-dec"] = self.dec, "cutout center Dec (deg)"
             header["sis-size"] = str(self.size), "cutout size"
@@ -256,7 +282,7 @@ def image_query(
     Parameters
     ----------
     obs_id : str
-        PDS4 logical identifier (LID).
+        Database observation ID, i.e., PDS4 logical identifier (LID).
 
     ra, dec : float, optional
         Extract sub-frame around this position: J2000 right ascension and
@@ -302,17 +328,19 @@ def image_query(
     download_filename: str = os.path.splitext(os.path.basename(im.image_url))[0]
     download_filename += filename_suffix(cutout_spec, format)
 
-    # ATLAS data and WCS are found in the first extension
+    # NEAT, ATLAS: data and WCS are found in the first extension
     wcs_ext: int = 0
     data_ext: int = 0
-    if ":gbo.ast.atlas.survey" in im.collection:
+    if ":gbo.ast.atlas.survey" or ":gbo.ast.neat.survey" in im.collection:
         wcs_ext = 1
         data_ext = 1
 
     # generate the cutout, as needed
-    meta = {"sis-lid": obs_id}
     fits_image_path: str = cutout_spec.cutout(
-        im.image_url, wcs_ext, data_ext, meta=meta
+        obs_id,
+        im.image_url,
+        wcs_ext,
+        data_ext,
     )
 
     # FITS format?  done!
