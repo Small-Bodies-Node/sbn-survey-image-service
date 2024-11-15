@@ -7,9 +7,14 @@ import signal
 import argparse
 import subprocess
 from argparse import ArgumentParser
-from typing import Dict, List, Tuple
+from sqlalchemy import MetaData
 
+from sbn_survey_image_service import models
 from sbn_survey_image_service.config.env import ENV, env_example
+from sbn_survey_image_service.services.database_provider import (
+    db_engine,
+    data_provider_session,
+)
 
 
 class ServiceException(Exception):
@@ -63,13 +68,13 @@ class SBNSISService:
         if os.getenv("VIRTUAL_ENV") is None:
             raise ServiceException("Not in a python virtual environment.")
 
-    def _get_gunicorn_processes(self) -> Tuple[int, int]:
+    def _get_gunicorn_processes(self) -> tuple[int, int]:
         """Return number of running processes for this virtual environment and the parent PID."""
-        all_processes: List[str] = (
+        all_processes: list[str] = (
             subprocess.check_output(["ps", "-ef"]).decode().splitlines()
         )
         venv: str = os.getenv("VIRTUAL_ENV")
-        processes: List[str] = [
+        processes: list[str] = [
             process for process in all_processes if f"{venv}/bin/gunicorn" in process
         ]
 
@@ -93,7 +98,7 @@ class SBNSISService:
             self.start_production()
 
     def start_dev(self) -> None:
-        cmd: List[str] = [
+        cmd: list[str] = [
             "nodemon",
             "-w",
             "sbn_survey_image_service/**",
@@ -105,7 +110,7 @@ class SBNSISService:
             "sbn_survey_image_service.app",
         ]
 
-        env: Dict[str, str] = os.environ.copy()
+        env: dict[str, str] = os.environ.copy()
         env["IS_PRODUCTION"] = "FALSE"
         try:
             subprocess.check_call(cmd, env=env)
@@ -113,7 +118,7 @@ class SBNSISService:
             pass
 
     def start_production(self) -> None:
-        cmd: List[str] = [
+        cmd: list[str] = [
             "gunicorn",
             "sbn_survey_image_service.app:app",
             "--workers",
@@ -128,7 +133,7 @@ class SBNSISService:
             ENV.SBNSIS_LOG_FILE,
         ]
 
-        env: Dict[str, str] = os.environ.copy()
+        env: dict[str, str] = os.environ.copy()
         env["IS_PRODUCTION"] = "TRUE"
         if self.args.daemon:
             env["IS_DAEMON"] = "TRUE"
@@ -194,7 +199,7 @@ class SBNSISService:
         print()
         self.rotate_logs()
 
-    def status(self, quiet=False) -> Tuple[int, int]:
+    def status(self, quiet=False) -> tuple[int, int]:
         """Returns number of running processes and parent PID."""
 
         self._check_venv()
@@ -240,6 +245,37 @@ class SBNSISService:
                 outf.write(env_example)
                 outf.write("\n")
             print_color("Wrote new .env file.")
+
+    def create_tables(self) -> None:
+        session: Session
+        with data_provider_session() as session:
+            current: MetaData = MetaData()
+            current.reflect(db_engine)
+            models.Base.metadata.create_all(db_engine)
+            updated: MetaData = MetaData()
+            updated.reflect(db_engine)
+
+        new: set[str] = set(updated.tables.keys()) - set(current.tables.keys())
+        s: str = "" if len(new) == 1 else "s"
+        print_color(f"Created {len(new)} database table{s}")
+        for name in new:
+            print_color(f" - {name}")
+
+    def verify_tables(self) -> None:
+        """Verify SBN SIS tables."""
+
+        metadata: MetaData = MetaData()
+        metadata.reflect(db_engine)
+
+        missing: bool = False
+        name: str
+        for name in models.Base.metadata.tables.keys():
+            if name not in metadata.tables.keys():
+                missing = True
+                print_color("{} is missing from database".format(name), Colors.red)
+
+        if not missing:
+            print_color("All tables verified")
 
     def argument_parser(self) -> ArgumentParser:
         parser: ArgumentParser = ArgumentParser(description="SBN Survey Image Service")
@@ -295,6 +331,18 @@ class SBNSISService:
             help="print the defaults, but do not save to .env",
         )
         env_parser.set_defaults(func=self.env_file)
+
+        # verify-tables ###############
+        verify_tables_parser: ArgumentParser = subparsers.add_parser(
+            "verify-tables", help="verify database tables"
+        )
+        verify_tables_parser.set_defaults(func=self.verify_tables)
+
+        # create-tables ###############
+        create_tables_parser: ArgumentParser = subparsers.add_parser(
+            "create-tables", help="create database tables, as needed"
+        )
+        create_tables_parser.set_defaults(func=self.create_tables)
 
         return parser
 

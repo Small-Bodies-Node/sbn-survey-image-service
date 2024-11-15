@@ -14,6 +14,7 @@ from sqlalchemy.exc import SQLAlchemyError, DBAPIError
 from sqlalchemy.pool import NullPool
 
 from ..config.env import ENV
+from ..models import Base
 
 # Build URI and instantiate data-provider service
 db_engine_URI: str = (

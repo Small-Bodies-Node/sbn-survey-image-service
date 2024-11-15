@@ -7,11 +7,11 @@ Image: ORM Model for table of served image data products.
 
 from sqlalchemy import Column, String, Integer
 from sqlalchemy.sql.sqltypes import Float
-from . import Base
+from .base import Base
 
 
 class Image(Base):
-    """ORM Class for served image data products.
+    """ORM class for served image data products.
 
     IVOA ObsCore model: https://ivoa.net/documents/ObsCore/20170509/REC-ObsCore-v1.1-20170509.pdf
     """
