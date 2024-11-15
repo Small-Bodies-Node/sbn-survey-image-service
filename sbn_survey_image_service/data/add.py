@@ -44,7 +44,11 @@ def _normalize_url(url):
 
 
 # Translate PDS4 processing level to IVOA ObsCore calib_level
-PDS4CalibrationLevel = {"Calibrated": 2, "Partially Processed": 1}
+PDS4CalibrationLevel = {
+    "Partially Processed": 1,
+    "Calibrated": 2,
+    "Derived": 3,
+}
 
 
 def add_label(
@@ -184,21 +188,12 @@ def pds4_image(label_path: str) -> Image:
     fz_compressed: bool = False  # some of our archive is compressed
     if lid.startswith("urn:nasa:pds:gbo.ast.neat.survey"):
         fz_compressed = True
-        if not valid_neat_image(label):
-            raise InvalidNEATImage(
-                f"{label_path} does not appear to be a NEAT on-sky image."
-            )
-        if "geodss" in lid:
-            im.pixel_scale = 1.43 / 3600
-        elif "tricam" in lid:
-            im.pixel_scale = 1.01 / 3600
+        test_valid_neat_image(label_path, label)
+        im.pixel_scale = (1.43 if "geodss" in lid else 1.01) / 3600
     elif lid.startswith("urn:nasa:pds:gbo.ast.atlas.survey"):
         # local ATLAS archive is compressed
         fz_compressed = True
-        if not valid_atlas_image(label):
-            raise InvalidATLASImage(
-                f"{label_path} does not appear to be an ATLAS prime image."
-            )
+        test_valid_atlas_image(label_path, label)
 
     if fz_compressed:
         im.image_url += ".fz"
@@ -232,25 +227,32 @@ def pds4_pixel_scale(label: ET.ElementTree) -> float | None:
     return cdelt
 
 
-def valid_neat_image(label: ET.ElementTree) -> bool:
-    """Only ingest NEAT survey on-sky images."""
+def test_valid_neat_image(label_path: str, label: ET.ElementTree) -> None:
+    """Only ingest NEAT survey on-sky images.
 
-    try:
-        title: str = label.find("Identification_Area/title").text
-    except AttributeError:
-        return False
-    return title in ["NEAT TRI-CAM IMAGE", "NEAT GEODSS IMAGE"]
+    Raises InvalidNEATImage if the label does not appear to be just that.
+
+    """
+
+    title: str = label.find("Identification_Area/title").text
+    if title not in ["NEAT TRI-CAM IMAGE", "NEAT GEODSS IMAGE"]:
+        raise InvalidNEATImage(
+            f"{label_path} does not appear to be a NEAT on-sky image."
+        )
 
 
-def valid_atlas_image(label: ET.ElementTree) -> bool:
+def test_valid_atlas_image(label_path: str, label: ET.ElementTree) -> None:
     """Only ingest ATLAS reduced images.
 
-    If the LID ends in .fits then it is probably what we want.
+    Raise InvalidATLASImage if LID does not end in .fits or .diff.
 
     """
 
     lid: str = label.find("Identification_Area/logical_identifier").text
-    return lid.endswith(".fits")
+    if not lid.endswith((".fits", ".diff")):
+        raise InvalidATLASImage(
+            f"{label_path} does not appear to be an ATLAS science or difference image."
+        )
 
 
 def add_directory(
