@@ -282,12 +282,9 @@ else:
                 except Exception as exc:
                     logger.error(exc)
                     errors += 1
-            logger.info(
-                "%d files added, %d files already in the database, %d files errored.",
-                count,
-                len(files) - count - errors,
-                errors,
-            )
+            logger.info("%d files added", count)
+            logger.info("%d files already in the database", len(files) - count - errors)
+            logger.info("%d files errored", errors)
 
             # update harvest log
             harvest_log.files += len(files)
