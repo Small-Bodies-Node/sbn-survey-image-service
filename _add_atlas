@@ -62,6 +62,54 @@ def setup_logger(args):
     return logger
 
 
+def get_time_of_last() -> Time:
+    """Get the time of the last file validation."""
+
+    date: Time
+    with data_provider_session() as session:
+        entry: HarvestLog = (
+            session.query(HarvestLog)
+            .filter(HarvestLog.source == "atlas")
+            .order_by(HarvestLog.end.desc())
+            .one()
+        )
+        date = Time(entry.time_of_last)
+    return date
+
+
+def is_harvest_processing() -> bool:
+    """True if a harvester log entry is set to 'processing'."""
+
+    is_processing: bool
+    with data_provider_session() as session:
+        is_processing = (
+            session.query(HarvestLog)
+            .filter(HarvestLog.source == "atlas")
+            .filter(HarvestLog.end == "processing")
+            .first()
+        ) is not None
+    return is_processing
+
+
+def get_collections(db, start, stop):
+    """Get collections validated between start and stop.
+
+    The rows are ordered so that if a fatal error occurs the next run might be
+    able to recover.
+
+    """
+
+    cursor = db.execute(
+        """SELECT * FROM nn
+           WHERE current_status = 'validated'
+             AND recorded_at > ? AND recorded_at < ?
+           ORDER BY recorded_at
+        """,
+        (start.unix, stop.unix),
+    )
+    return cursor.fetchall()
+
+
 def collection_version(collection) -> Version:
     """Get the collection version."""
     is_collection = (
@@ -124,9 +172,9 @@ mutex.add_argument(
     "--since-date", type=Time, help="harvest metadata validated since this date"
 )
 mutex.add_argument(
-    "--since",
+    "--past",
     type=int,
-    help="harvest metadata validated in the past SINCE hours (default: 24)",
+    help="harvest metadata validated in the past SINCE hours",
 )
 mutex.add_argument(
     "--between-dates",
@@ -155,68 +203,77 @@ except Exception as exc:
 
 logger.info("Connected to database %s", args.database)
 
-if args.between_dates:
+if args.between_dates is not None:
     start = args.between_dates[0]
     stop = args.between_dates[-1]
     logger.info(
         "Checking for collections validated between %s and %s", start.iso, stop.iso
     )
-
-    # check for new collections
-    cursor = db.execute(
-        "SELECT * FROM nn WHERE current_status = 'validated' AND recorded_at > ? AND recorded_at < ?",
-        (start.unix, stop.unix),
+elif args.past is not None:
+    date = Time.now() - args.past * u.hr
+    logger.info(
+        "Checking for collections validated in the past %d hr (since %s)",
+        args.past,
+        date.iso,
     )
-    results = cursor.fetchall()
-else:
-    if args.since_date:
-        date = args.since_date
-    else:
-        date = Time.now() - args.since * u.hr
+elif args.since_date:
+    date = args.since_date
     logger.info("Checking for collections validated since %s", date.iso)
-
-    # check for new collections
-    cursor = db.execute(
-        "SELECT * FROM nn WHERE current_status = 'validated' AND recorded_at > ?",
-        (date.unix,),
+else:
+    date = get_time_of_last(
+        db,
     )
-    results = cursor.fetchall()
+
+results = get_collections(db, start, stop)
 
 if len(results) == 0:
     logger.info("No new data collections found.")
 else:
-    logger.info("Found %d new collections.", len(results))
+    logger.debug("Found %d new collections.", len(results))
     for row in results:
         logger.debug("%d|%d|%s", row["oc"], row["nn"], row["location"])
 
     with data_provider_session() as session:
         harvest_log: HarvestLog = HarvestLog(
             start=Time.now().iso,
+            end="processing",
             source="atlas",
             time_of_last="",
             files=0,
             added=0,
             errors=0,
         )
-        for row in results:
+
+        # save to database now with "processing" status to prevent other
+        # instances from running
+        session.add(harvest_log)
+        session.commit()
+
+        for i, row in enumerate(results):
+            logger.info("%d collections to process.", len(results) - i)
+
             collections = [
                 pds4_tools.read(fn, quiet=True)
                 for fn in glob(f"/n/{row['location']}/collection_{row['nn']}*.xml")
             ]
+
+            # find the latest collection lidvid and save to the log
             versions = [collection_version(label) for label in collections]
             latest = collections[versions.index(max(versions))]
             lid = latest.label.find("Identification_Area/logical_identifier").text
             vid = latest.label.find("Identification_Area/version_id").text
             logger.info("Found collection %s::%s", lid, vid)
 
+            # Find image products in the data directory
             data_directory = f"/n/{row['location']}/data"
             logger.debug(
                 "Inspecting directory %s for image products",
                 data_directory,
             )
             files = get_image_labels(latest, data_directory)
-            logger.info("%d image products to add", len(files))
+            logger.debug("%d image products to add", len(files))
 
+            # harvest metadata
             count = 0
             errors = 0
             for label in files:
@@ -232,13 +289,20 @@ else:
                 errors,
             )
 
+            # update harvest log
             harvest_log.files += len(files)
             harvest_log.added += count
             harvest_log.errors += errors
             harvest_log.time_of_last = max(
                 harvest_log.time_of_last, Time(row["recorded_at"], format="unix").iso
             )
+
+            # save interim results
+            session.merge(harvest_log)
+            session.commit()
+
         harvest_log.end = Time.now().iso
-        session.add(harvest_log)
+        session.merge(harvest_log)
+        session.commit()
 
 logger.info("Finished.")
