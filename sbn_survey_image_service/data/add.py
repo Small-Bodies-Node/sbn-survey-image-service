@@ -57,6 +57,7 @@ def add_label(
     base_url: str = "file://",
     strip_leading: str = "",
     relax: bool = False,
+    dry_run: bool = False,
 ) -> bool:
     """Add label and image data to database.
 
@@ -78,6 +79,10 @@ def add_label(
 
     relax : bool, optional
         Set to ``True`` and errors will be logged, but otherwise ignored.
+
+    dry_run : bool, optional
+        Do everything other than update the database.
+
 
     Returns
     -------
@@ -116,7 +121,8 @@ def add_label(
         return False
 
     # add to database
-    session.add(im)
+    if not dry_run:
+        session.add(im)
 
     logger.debug("Adding %s", label_path)
     return True
