@@ -262,7 +262,7 @@ def create_browse_image(
     data: np.ndarray = fits.getdata(fits_image_path)
     data = interval(data, clip=True) * 255
     image: PIL_Image = PIL_Image.fromarray(data.astype(np.uint8)[::-1])
-    image.save(output_image_path, format=format.format)
+    image.save(output_image_path, format=format.format, quality=95)
 
 
 def image_query(
