@@ -319,7 +319,7 @@ def image_query(
         exc: Exception
         try:
             im = session.query(Image).filter(Image.obs_id == obs_id).one()
-        except NoResultFound as exc:
+        except NoResultFound as exc:  # noqa: F841
             raise InvalidImageID("Image ID not found in database.") from exc
 
         session.expunge(im)
@@ -331,7 +331,8 @@ def image_query(
     # NEAT, ATLAS: data and WCS are found in the first extension
     wcs_ext: int = 0
     data_ext: int = 0
-    if ":gbo.ast.atlas.survey" or ":gbo.ast.neat.survey" in im.collection:
+    collections_with_wcs_ext_1 = [":gbo.ast.atlas.survey", ":gbo.ast.neat.survey"]
+    if any(c in im.collection for c in collections_with_wcs_ext_1):
         wcs_ext = 1
         data_ext = 1
 
