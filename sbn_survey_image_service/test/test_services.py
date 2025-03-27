@@ -3,15 +3,20 @@
 
 import os
 import pytest
+import tempfile
+
 from sqlalchemy.orm.session import Session
+from PIL import Image
+
 import numpy as np
+from astropy.wcs import WCS
 from astropy.io import fits
 from astropy.coordinates import Angle
 
 from ..data.test import generate
 from ..data import generate_cache_filename
 from ..services.database_provider import data_provider_session
-from ..services.image import image_query
+from ..services.image import image_query, create_browse_image
 from ..services.label import label_query
 from ..config.env import ENV
 from ..config.exceptions import InvalidImageID, ParameterValueError
@@ -131,3 +136,37 @@ def test_image_query_obs_id_fail():
 def test_image_query_format_fail():
     with pytest.raises(ParameterValueError):
         image_query("", format="something else")
+
+
+def test_create_browse_image_alignment():
+    im = np.zeros((10, 10))
+    im[:1] = 1
+
+    wcs = WCS()
+    wcs.wcs.crval = (0, 0)
+    wcs.wcs.crpix = (3, 3)
+    wcs.wcs.pc = [[0.5, 0], [0, -0.5]]
+
+    with tempfile.TemporaryFile("w+b") as dataf:
+        # write our test data to a FITS file
+        fits.write(dataf, im, wcs.to_header())
+        dataf.close()
+
+        # convert the FITS to JPEG and verify the orientation
+        with tempfile.TemporaryFile("w+b") as imf:
+            create_browse_image(dataf.name, imf, "jpeg", False)
+            imf.close()
+            data = np.array(Image.open(imf.name, format="jpeg"))
+            # JPEGs are drawn top to bottom, so the 1111111 row is first in the
+            # array
+            assert data[0, 0] == 1
+            assert data[-1, 0] == 0
+
+        # convert FITS to JPEG with north up
+        with tempfile.TemporaryFile("w+b") as alignedf:
+            create_browse_image(dataf.name, alignedf, "jpeg", True)
+            alignedf.close()
+            data = np.array(Image.open(alignedf.name, format="jpeg"))
+            # now the 1111111 row is last
+            assert data[0, 0] == 0
+            assert data[-1, 0] == 1

@@ -7,25 +7,24 @@ import os
 from copy import copy
 import warnings
 from enum import Enum
-from typing import List, Tuple
+from typing import BinaryIO
 
 from PIL import Image as PIL_Image
 from sqlalchemy.orm.exc import NoResultFound
 import numpy as np
-from astropy.coordinates import Angle
 import astropy.units as u
 from astropy.io import fits
 from astropy.time import Time
 from astropy.nddata import Cutout2D
-from astropy.coordinates import SkyCoord, Angle
 from astropy.wcs import WCS, FITSFixedWarning
+from astropy.coordinates import SkyCoord, Angle
 from astropy.visualization import ZScaleInterval
+from reproject import reproject_adaptive
 
-from .database_provider import data_provider_session, Session
+from .database_provider import data_provider_session
 from ..data import url_to_local_file, generate_cache_filename
 from ..models.image import Image
 from ..config.exceptions import InvalidImageID, ParameterValueError
-from ..config.env import ENV
 from .. import __version__ as sis_version
 
 
@@ -64,11 +63,11 @@ class CutoutSpec:
     MINUMUM_SIZE: Angle = Angle(1 * u.arcsec)
 
     def __init__(self, ra: float | None, dec: float | None, size: str | Angle | None):
-        self.ra: float | None = ra
-        self.dec: float | None = dec
+        self.ra = ra
+        self.dec = dec
         self.normalize()
 
-        self.size: Angle = (
+        self.size = (
             self.MINUMUM_SIZE if size is None else max(self.MINUMUM_SIZE, Angle(size))
         )
 
@@ -135,19 +134,18 @@ class CutoutSpec:
         if self.full_size:
             return url_to_local_file(url)
 
-        fits_image_path: str = generate_cache_filename(url, str(self), "fits")
+        fits_image_path = generate_cache_filename(url, str(self), "fits")
 
         # file exists?  done!
         if os.path.exists(fits_image_path):
             return fits_image_path
 
         # output data object
-        result: fits.HDUList = fits.HDUList()
+        result = fits.HDUList()
 
         # use fsspec so that we only read (and decompress) the portions of the
         # file that are needed for the cutout
-        data: fits.HDUList
-        options: dict = {
+        options = {
             "cache": False,
             "use_fsspec": True,
             "lazy_load_hdus": True,
@@ -156,7 +154,6 @@ class CutoutSpec:
         with fits.open(url, **options) as data:
             wcs_header: fits.Header = copy(data[wcs_ext].header)
 
-            wcs: WCS
             with warnings.catch_warnings():
                 warnings.simplefilter(
                     "ignore", (fits.verify.VerifyWarning, FITSFixedWarning)
@@ -183,9 +180,7 @@ class CutoutSpec:
                     else:
                         raise
 
-            cutout: Cutout2D = Cutout2D(
-                data[data_ext].section, self.coords, self.size, wcs=wcs
-            )
+            cutout = Cutout2D(data[data_ext].section, self.coords, self.size, wcs=wcs)
 
             header: fits.Header = copy(data[data_ext].header)
             header.update(cutout.wcs.to_header())
@@ -229,7 +224,7 @@ def filename_suffix(cutout_spec: CutoutSpec, format: ImageFormat) -> str:
 
     """
 
-    suffix: str = ""
+    suffix = ""
     if not cutout_spec.full_size:
         # attachment file name is based on coordinates and size
         suffix = f"_{cutout_spec.ra:.5f}{cutout_spec.dec:+.5f}_{cutout_spec.size}"
@@ -238,31 +233,57 @@ def filename_suffix(cutout_spec: CutoutSpec, format: ImageFormat) -> str:
 
 
 def create_browse_image(
-    fits_image_path: str,
-    output_image_path: str,
+    input_image: str | BinaryIO,
+    output_image: str | BinaryIO,
     format: ImageFormat,
+    align: bool,
 ) -> None:
     """Create the browse (JPEG, PNG) image.
 
 
     Parameters
     ----------
-    fits_image_path : str
+    input_image : str or file-like
         The source FITS image file name.
 
-    image_path : str
+    output_image : str or file-like
         The file name of the output.
 
     format : ImageFormat
         The format of the output (must be JPEG, JPG, or PNG).
 
+    align : bool
+        Align the image with north up.
+
     """
 
-    interval: ZScaleInterval = ZScaleInterval()
-    data: np.ndarray = fits.getdata(fits_image_path)
+    interval = ZScaleInterval()
+    data = fits.getdata(input_image)
+
+    if align:
+        wcs0 = WCS(input_image)
+
+        crpix = (np.array(data.shape) - 1) / 2
+        crval = wcs0.pixel_to_world_values(crpix)
+
+        wcs_aligned = WCS()
+        wcs_aligned.wcs.crpix = crpix
+        wcs_aligned.wcs.crval = crval
+        pc = np.array([[-1, 0], [0, 1]]) * np.abs(np.linalg.det(wcs0.wcs.pc))
+        wcs_aligned.wcs.pc = pc
+
+        data = reproject_adaptive(
+            (data, wcs0),
+            wcs_aligned,
+            shape_out=data.shape,
+            conserve_flux=True,
+            return_footprint=False,
+            parallel=True,
+        )
+
     data = interval(data, clip=True) * 255
-    image: PIL_Image = PIL_Image.fromarray(data.astype(np.uint8)[::-1])
-    image.save(output_image_path, format=format.format, quality=95)
+    image = PIL_Image.fromarray(data.astype(np.uint8)[::-1])
+    image.save(output_image, format=format.format, quality=95)
 
 
 def image_query(
@@ -270,8 +291,9 @@ def image_query(
     ra: float | None = None,
     dec: float | None = None,
     size: str | None = None,
+    align: bool = False,
     format: str | ImageFormat | None = None,
-) -> Tuple[str, str]:
+) -> tuple[str, str]:
     """Query database for image file or cutout thereof.
 
 
@@ -292,6 +314,10 @@ def image_query(
         Sub-frame size in angular units, e.g., '5arcmin'.  Parsed with
         `astropy.units.Quantity`.
 
+    align : bool, option
+        Set to `True` to align JPEG or PNG images with north up.  Ignored
+        for other formats.
+
     format : str or ImageFormat, optional
         Returned image format: fits, png, jpeg
 
@@ -306,17 +332,14 @@ def image_query(
 
     """
 
-    cutout_spec: CutoutSpec = CutoutSpec(ra, dec, size)
+    cutout_spec = CutoutSpec(ra, dec, size)
 
     try:
         format = ImageFormat(format)
     except ValueError:
         raise ParameterValueError("image_query format must be fits, png, or jpeg.")
 
-    im: Image
-    session: Session
     with data_provider_session() as session:
-        exc: Exception
         try:
             im = session.query(Image).filter(Image.obs_id == obs_id).one()
         except NoResultFound as exc:  # noqa: F841
@@ -325,19 +348,19 @@ def image_query(
         session.expunge(im)
 
     # create attachment file name
-    download_filename: str = os.path.splitext(os.path.basename(im.image_url))[0]
+    download_filename = os.path.splitext(os.path.basename(im.image_url))[0]
     download_filename += filename_suffix(cutout_spec, format)
 
     # NEAT, ATLAS: data and WCS are found in the first extension
-    wcs_ext: int = 0
-    data_ext: int = 0
+    wcs_ext = 0
+    data_ext = 0
     collections_with_wcs_ext_1 = [":gbo.ast.atlas.survey", ":gbo.ast.neat.survey"]
     if any(c in im.collection for c in collections_with_wcs_ext_1):
         wcs_ext = 1
         data_ext = 1
 
     # generate the cutout, as needed
-    fits_image_path: str = cutout_spec.cutout(
+    fits_image_path = cutout_spec.cutout(
         obs_id,
         im.image_url,
         wcs_ext,
@@ -358,7 +381,7 @@ def image_query(
         return image_path, download_filename
 
     # create the jpeg or png
-    create_browse_image(fits_image_path, image_path, format)
+    create_browse_image(fits_image_path, image_path, format, align)
 
     # rw-rw-r--
     # In [16]: (stat.S_IFREG | stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH)
