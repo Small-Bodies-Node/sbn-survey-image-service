@@ -55,7 +55,8 @@ Logging
 
 Application error and informational logging is sent to the standard error stream (stderr) and the file specified by the ``SBNSIS_LOG_FILE`` environment variable.  If this is set to use the `logging/` directory in the repository, then the `sbnsis` tool will be able to automatically rotate logs using `logrotate` and the `logging/logrotate.config` file.  If `SBNSIS_LOG_FILE` is set to another location, the `logrotate.config` file should be edited, or else log rotation will not work.  Successful requests will produce two log items: the parameters and the results as JSON-formatted strings. The items are linked by a randomly generated job ID:
 
-.. code-bock:: text
+.. code:: text
+
    INFO 2021-02-17 14:10:16,960: {"job_id": "013f7515aa074ee58ad5929c8391a366", "id": "urn:nasa:pds:gbo.ast.neat.survey:data_tricam:p20021023_obsdata_20021023113833a", "ra": 47.4495603, "dec": 32.9424075, "size": "5arcmin", "format": "fits", "download": true}
    INFO 2021-02-17 14:10:18,339: {"job_id": "013f7515aa074ee58ad5929c8391a366", "filename": "/hylonome3/transient/tmpw8s8qj1b.fits", "download_filename": "20021023113833a.fit_47.4495632.94241_5arcmin.fits", "mime_type": "image/fits"}
 
