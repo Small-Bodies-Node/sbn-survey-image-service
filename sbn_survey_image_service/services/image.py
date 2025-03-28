@@ -19,12 +19,14 @@ from astropy.nddata import Cutout2D
 from astropy.wcs import WCS, FITSFixedWarning
 from astropy.coordinates import SkyCoord, Angle
 from astropy.visualization import ZScaleInterval
-from reproject import reproject_adaptive
+from reproject import reproject_interp
 
 from .database_provider import data_provider_session
 from ..data import url_to_local_file, generate_cache_filename
 from ..models.image import Image
 from ..config.exceptions import InvalidImageID, ParameterValueError
+
+order = ("nearest-neighbor",)
 from .. import __version__ as sis_version
 
 
@@ -257,27 +259,30 @@ def create_browse_image(
 
     """
 
+    format = ImageFormat(format)
+
     interval = ZScaleInterval()
     data = fits.getdata(input_image)
 
     if align:
         wcs0 = WCS(input_image)
 
-        crpix = (np.array(data.shape) - 1) / 2
-        crval = wcs0.pixel_to_world_values(crpix)
+        # Recall that CRPIX is 1-index based:
+        crpix = np.array(data.shape) / 2
+        crval = wcs0.pixel_to_world_values(*crpix)
 
         wcs_aligned = WCS()
         wcs_aligned.wcs.crpix = crpix
         wcs_aligned.wcs.crval = crval
-        pc = np.array([[-1, 0], [0, 1]]) * np.abs(np.linalg.det(wcs0.wcs.pc))
+        pc = np.array([[-1, 0], [0, 1]]) * np.sqrt(np.abs(np.linalg.det(wcs0.wcs.pc)))
         wcs_aligned.wcs.pc = pc
 
-        data = reproject_adaptive(
+        data = reproject_interp(
             (data, wcs0),
             wcs_aligned,
             shape_out=data.shape,
-            conserve_flux=True,
             return_footprint=False,
+            order="nearest-neighbor",
             parallel=True,
         )
 
