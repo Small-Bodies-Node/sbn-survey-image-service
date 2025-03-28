@@ -5,7 +5,7 @@ Set HTTP User-Agent parameter.
 from contextlib import contextmanager
 import requests as req
 from astropy.utils.data import conf as astropy_conf
-from . import __version__
+from .. import __version__
 
 
 user_agent = f"SBN Survey Image Service {__version__}"
