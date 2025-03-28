@@ -3,31 +3,32 @@
 
 __all__ = ["url_to_local_file", "generate_cache_filename"]
 
-import io
 import os
 import hashlib
 import requests
 from requests.models import HTTPError
-from urllib.parse import ParseResult, urlparse
+from urllib.parse import urlparse
 
 from ..config.env import ENV
+from ..services import network
 
 
 def url_to_local_file(url: str) -> str:
     """Returns path to a local file, fetching remote files as needed."""
-    path: str
-    p: ParseResult = urlparse(url)
+
+    p = urlparse(url)
     if p.scheme == "file":
         path = os.path.abspath(p.path)
     else:
-        r: requests.Response = requests.get(url)
-        if r.status_code != 200:
-            raise HTTPError(r.status_code)
+        with network.session() as s:
+            s = requests.get(url)
 
-        path = generate_cache_filename(url)
-        outf: io.IOBase
-        with open(path, "wb") as outf:
-            outf.write(r.content)
+            if s.status_code != 200:
+                raise HTTPError(s.status_code)
+
+            path = generate_cache_filename(url)
+            with open(path, "wb") as outf:
+                outf.write(s.content)
 
         # rw-rw-r--
         # In [16]: (stat.S_IFREG | stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH)
@@ -37,7 +38,7 @@ def url_to_local_file(url: str) -> str:
     return path
 
 
-def generate_cache_filename(*args):
+def generate_cache_filename(*args: str) -> str:
     """Make consistent file name based on MD5 sum of the arguments.
 
 

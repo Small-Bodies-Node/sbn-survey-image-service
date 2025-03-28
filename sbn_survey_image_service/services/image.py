@@ -11,6 +11,7 @@ from typing import BinaryIO
 
 from PIL import Image as PIL_Image
 from sqlalchemy.orm.exc import NoResultFound
+
 import numpy as np
 import astropy.units as u
 from astropy.io import fits
@@ -25,6 +26,7 @@ from .database_provider import data_provider_session
 from ..data import url_to_local_file, generate_cache_filename
 from ..models.image import Image
 from ..config.exceptions import InvalidImageID, ParameterValueError
+from . import network
 
 order = ("nearest-neighbor",)
 from .. import __version__ as sis_version
@@ -153,34 +155,35 @@ class CutoutSpec:
             "lazy_load_hdus": True,
             "fsspec_kwargs": {"block_size": 1024 * 512, "cache_type": "bytes"},
         }
-        with fits.open(url, **options) as data:
-            wcs_header: fits.Header = copy(data[wcs_ext].header)
+        with network.set_astropy_useragent():
+            with fits.open(url, **options) as data:
+                wcs_header: fits.Header = copy(data[wcs_ext].header)
 
-            with warnings.catch_warnings():
-                warnings.simplefilter(
-                    "ignore", (fits.verify.VerifyWarning, FITSFixedWarning)
-                )
+                with warnings.catch_warnings():
+                    warnings.simplefilter(
+                        "ignore", (fits.verify.VerifyWarning, FITSFixedWarning)
+                    )
 
-                # XPIXELSZ and YPIXELSZ cause wcslib to look for DSS distortion
-                # keywords.  This causes failures for NEAT data.
-                try:
-                    wcs = WCS(wcs_header)
-                except ValueError:
-                    # try to fix the header
-                    retry = False
-
-                    if "XPIXELSZ" in wcs_header:
-                        retry = True
-                        del wcs_header["XPIXELSZ"]
-
-                    if "YPIXELSZ" in wcs_header:
-                        retry = True
-                        del wcs_header["YPIXELSZ"]
-
-                    if retry:
+                    # XPIXELSZ and YPIXELSZ cause wcslib to look for DSS distortion
+                    # keywords.  This causes failures for NEAT data.
+                    try:
                         wcs = WCS(wcs_header)
-                    else:
-                        raise
+                    except ValueError:
+                        # try to fix the header
+                        retry = False
+
+                        if "XPIXELSZ" in wcs_header:
+                            retry = True
+                            del wcs_header["XPIXELSZ"]
+
+                        if "YPIXELSZ" in wcs_header:
+                            retry = True
+                            del wcs_header["YPIXELSZ"]
+
+                        if retry:
+                            wcs = WCS(wcs_header)
+                        else:
+                            raise
 
             cutout = Cutout2D(data[data_ext].section, self.coords, self.size, wcs=wcs)
 

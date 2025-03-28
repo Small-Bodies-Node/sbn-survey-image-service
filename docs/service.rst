@@ -64,6 +64,12 @@ Application error and informational logging is sent to the standard error stream
 OpenAPI errors (e.g., invalid parameter values from the user) are not logged.  Internal code errors will be logged with a code traceback.
 
 
+User agent
+----------
+
+All HTTP requests made by the service will have a user agent of "SBN Survey Image Service {version}".
+
+
 Updating SBNSIS
 ---------------
 
