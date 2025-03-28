@@ -18,6 +18,7 @@ dependencies = [
     "pds4_tools==1.4",
     "pytest-remotedata>=0.4",
     "python-dotenv~=1.0",
+    "reproject>=0.14",
     "SQLAlchemy>=2.0",
 ]
 

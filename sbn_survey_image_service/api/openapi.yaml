@@ -60,6 +60,14 @@ paths:
           schema:
             type: string
             pattern: '^\d+(\.\d*)?(arcsec|arcmin|deg|degree|rad|radian)$'
+        - name: align
+          in: query
+          description: "Rotate the cutout to align equatorial north with the image up direction.  Otherwise the image will have the same orientation as the native FITS data (drawn with the origin in the lower left).  Only valid for JPEG and PNG formatted cutouts."
+          example: false
+          required: false
+          allowEmptyValue: false
+          schema:
+            type: boolean
         - name: download
           in: query
           description: Prompt for downloading via web browsers (sets HTTP Content-Disposition).
