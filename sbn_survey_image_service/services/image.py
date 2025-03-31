@@ -265,16 +265,18 @@ def create_browse_image(
     format = ImageFormat(format)
 
     interval = ZScaleInterval()
-    data = fits.getdata(input_image)
+    hdul = fits.open(input_image, "readonly")
+    data = hdul[0].data
 
     if align:
-        wcs0 = WCS(input_image)
+        wcs0 = WCS(hdul[0].header)
 
         # Recall that CRPIX is 1-index based:
         crpix = np.array(data.shape) / 2
         crval = wcs0.pixel_to_world_values(*crpix)
 
         wcs_aligned = WCS()
+        wcs_aligned.wcs.ctype = "RA---TAN", "DEC--TAN"
         wcs_aligned.wcs.crpix = crpix
         wcs_aligned.wcs.crval = crval
         pc = np.array([[-1, 0], [0, 1]]) * np.sqrt(np.abs(np.linalg.det(wcs0.wcs.pc)))
@@ -292,6 +294,8 @@ def create_browse_image(
     data = interval(data, clip=True) * 255
     image = PIL_Image.fromarray(data.astype(np.uint8)[::-1])
     image.save(output_image, format=format.format, quality=95)
+
+    hdul.close()
 
 
 def image_query(
@@ -381,7 +385,16 @@ def image_query(
 
     # formulate the final image file name
     image_path = generate_cache_filename(
-        im.image_url, str(cutout_spec), format.extension
+        im.image_url,
+        str(cutout_spec),
+        format.extension,
+        (
+            "align"
+            if (
+                align and format in (ImageFormat.JPEG, ImageFormat.JPG, ImageFormat.PNG)
+            )
+            else ""
+        ),
     )
 
     # was this file already generated?  serve it!
