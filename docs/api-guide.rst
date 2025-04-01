@@ -184,8 +184,14 @@ To return a JPEG formatted image, use the ``format=jpeg`` option:
 .. image:: _static/20020222120052c.fit_174.62244+17.97594_5arcmin.jpeg
 
 
-Get image metadata (PDS4 label)
--------------------------------
+Image metadata
+--------------
+
+FITS formatted image cutouts carry the original FITS header, unmodified except for WCS keywords.  Image previews (JPEG, PNG) will contain a limited amount of WCS metadata based on the `Astronomy Visualization Metadata Standard <https://www.virtualastronomy.org/avm_metadata.php>`_.  The metadata are stored in the image file's Extensible Metadata Platform (XMP) tags, and may be used to, e.g., `overlay images in the Worldwide Telescope <https://docs.worldwidetelescope.org/layer-guide/1/astro-image-data/>`_.
+
+
+Archival metadata: PDS4 labels
+------------------------------
 
 Return the archival metadata associated with a data product using the
 ``images/{id}`` endpoint with the ``format=label`` option:

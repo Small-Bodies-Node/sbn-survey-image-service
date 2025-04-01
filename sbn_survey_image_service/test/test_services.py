@@ -143,8 +143,10 @@ def test_create_browse_image_alignment():
     im[0, :] = 1  # first row is 1111111
 
     wcs = WCS()
-    wcs.wcs.crval = (0, 0)
-    wcs.wcs.crpix = (3, 3)
+    wcs.pixel_shape = im.shape
+    wcs.wcs.ctype = "RA---TAN", "DEC--TAN"
+    wcs.wcs.crpix = (3, 4)
+    wcs.wcs.crval = (10, 20)
     wcs.wcs.pc = [[0.5, 0], [0, -0.5]]
 
     with tempfile.NamedTemporaryFile("w+b", delete=False) as dataf:
@@ -154,8 +156,8 @@ def test_create_browse_image_alignment():
 
         # convert the FITS to JPEG and verify the orientation
         with tempfile.NamedTemporaryFile("w+b", delete=False) as imf:
-            create_browse_image(dataf.name, imf, "jpeg", False)
             imf.close()
+            create_browse_image(dataf.name, imf.name, "jpeg", False)
             data = np.array(Image.open(imf.name, formats=["jpeg"]))
             # JPEGs are drawn top to bottom, so the 1111111 row is first in the
             # array
@@ -164,8 +166,8 @@ def test_create_browse_image_alignment():
 
         # convert FITS to JPEG with north up
         with tempfile.NamedTemporaryFile("w+b", delete=False) as alignedf:
-            create_browse_image(dataf.name, alignedf, "jpeg", True)
             alignedf.close()
+            create_browse_image(dataf.name, alignedf.name, "jpeg", True)
             data = np.array(Image.open(alignedf.name, formats=["jpeg"]))
             # now the 1111111 row is last
             assert all(data[0, :] == 255)

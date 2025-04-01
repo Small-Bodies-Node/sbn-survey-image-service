@@ -21,6 +21,7 @@ from astropy.wcs import WCS, FITSFixedWarning
 from astropy.coordinates import SkyCoord, Angle
 from astropy.visualization import ZScaleInterval
 from reproject import reproject_interp
+from pyavm import AVM
 
 from .database_provider import data_provider_session
 from ..data import url_to_local_file, generate_cache_filename
@@ -185,7 +186,9 @@ class CutoutSpec:
                         else:
                             raise
 
-            cutout = Cutout2D(data[data_ext].section, self.coords, self.size, wcs=wcs)
+                cutout = Cutout2D(
+                    data[data_ext].section, self.coords, self.size, wcs=wcs
+                )
 
             header: fits.Header = copy(data[data_ext].header)
             header.update(cutout.wcs.to_header())
@@ -238,8 +241,8 @@ def filename_suffix(cutout_spec: CutoutSpec, format: ImageFormat) -> str:
 
 
 def create_browse_image(
-    input_image: str | BinaryIO,
-    output_image: str | BinaryIO,
+    input_image: str,
+    output_image: str,
     format: ImageFormat,
     align: bool,
 ) -> None:
@@ -248,10 +251,10 @@ def create_browse_image(
 
     Parameters
     ----------
-    input_image : str or file-like
+    input_image : str
         The source FITS image file name.
 
-    output_image : str or file-like
+    output_image : str
         The file name of the output.
 
     format : ImageFormat
@@ -264,38 +267,51 @@ def create_browse_image(
 
     format = ImageFormat(format)
 
-    interval = ZScaleInterval()
     hdul = fits.open(input_image, "readonly")
     data = hdul[0].data
 
+    # align with north up?
     if align:
+        # current WCS
         wcs0 = WCS(hdul[0].header)
 
-        # Recall that CRPIX is 1-index based:
+        # Recall that CRPIX is a 1-based index:
         crpix = np.array(data.shape) / 2
         crval = wcs0.pixel_to_world_values(*crpix)
 
-        wcs_aligned = WCS()
-        wcs_aligned.wcs.ctype = "RA---TAN", "DEC--TAN"
-        wcs_aligned.wcs.crpix = crpix
-        wcs_aligned.wcs.crval = crval
-        pc = np.array([[-1, 0], [0, 1]]) * np.sqrt(np.abs(np.linalg.det(wcs0.wcs.pc)))
-        wcs_aligned.wcs.pc = pc
+        # aligned WCS
+        wcs = WCS()
+        wcs.pixel_shape = data.shape
+        wcs.wcs.ctype = "RA---TAN", "DEC--TAN"
+        wcs.wcs.crpix = crpix
+        wcs.wcs.crval = crval
+        pix_scale = np.sqrt(np.abs(np.linalg.det(wcs0.wcs.pc)))
+        pc = np.array([[-1, 0], [0, 1]]) * pix_scale
+        wcs.wcs.pc = pc
 
+        # reproject to the new WCS
         data = reproject_interp(
             (data, wcs0),
-            wcs_aligned,
+            wcs,
             shape_out=data.shape,
             return_footprint=False,
             order="nearest-neighbor",
             parallel=True,
         )
+    else:
+        wcs = WCS(hdul[0].header)
 
+    # zscale, stretch to 0 to 255, and convert to unsigned int, save
+    interval = ZScaleInterval()
     data = interval(data, clip=True) * 255
     image = PIL_Image.fromarray(data.astype(np.uint8)[::-1])
     image.save(output_image, format=format.format, quality=95)
 
     hdul.close()
+
+    # annotate with XMP-formatted WCS
+    avm = AVM.from_wcs(wcs)
+    avm.embed(output_image, output_image)
 
 
 def image_query(
