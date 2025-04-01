@@ -4,7 +4,7 @@ servers:
 info:
   title: SBN Survey Image Service
   version: {{version}}
-  description: API for serving images, cutouts, and data labels from survey data provided by the NASA Planetary Data System Small Bodies Node.  Note that this service is more closely aligned with IVOA concepts, rather than PDS4 concepts.  (PDS4-concept supported queries will be possible in the future with the PDS4 Registry.)
+  description: API for serving images, cutouts, and data labels from survey data provided by the NASA Planetary Data System Small Bodies Node.  See the [API User's Guide](https://sbn-survey-image-service.readthedocs.io/en/stable/api-guide.html) for more information.
 servers:
   - url: {{base_href}}
 paths:
