@@ -5,10 +5,10 @@ import json
 import uuid
 
 from flask import send_file, Response
-from connexion.exceptions import BadRequestProblem
 
 from ..config import MIME_TYPES
 from ..config.logging import get_logger
+from ..config.exceptions import ParameterValueError
 from ..services.label import label_query
 from ..services.image import image_query
 
@@ -42,14 +42,18 @@ def get_image(
         )
     )
 
-    align_requires = ["jpeg", "png"]
-    if align and format.lower() not in align_requires:
-        raise BadRequestProblem(
-            f"align=true requires format={', '.join(align_requires)}"
+    # Either define all, or none
+    cutout_params_exist = [p is None for p in (ra, dec, size)]
+    if not all(cutout_params_exist) and any(cutout_params_exist):
+        raise ParameterValueError(
+            "If one of ra, dec, or size is defined, then all must be defined."
         )
 
-    if align and size is None:
-        raise BadRequestProblem("align=true requires size")
+    align_requires = ["jpeg", "png"]
+    if align and format.lower() not in align_requires:
+        raise ParameterValueError(
+            f"align=true requires format={', '.join(align_requires)}"
+        )
 
     if format.lower() == "label":
         filename, download_filename = label_query(id)

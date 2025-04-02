@@ -276,7 +276,7 @@ def create_browse_image(
 
     data_ext : int
         The FITS HDU extension with the data to cutout.
-    
+
     """
 
     format = ImageFormat(format)
@@ -284,7 +284,7 @@ def create_browse_image(
     hdul = fits.open(input_image, "readonly")
     data = hdul[data_ext].data
 
-    h = hdul[wcs_ext].header
+    h = hdul[wcs_ext].header.copy()
 
     # These keywords (e.g., in NEAT data) trigger DSS mode in wcslib... avoid
     # that:
@@ -295,8 +295,6 @@ def create_browse_image(
 
     # current wcs
     wcs0 = WCS(h)
-
-    # correction for 
 
     # align with north up?
     if align:
