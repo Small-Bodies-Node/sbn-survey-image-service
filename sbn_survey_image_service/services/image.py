@@ -134,16 +134,22 @@ class CutoutSpec:
             The file name of the a FITS file cutout, or, if ``self.full_size``
             is True, the full-sized FITS image.
 
+        wcs_ext : int
+            The FITS HDU extension with the WCS.
+
+        data_ext : int
+            The FITS HDU extension with the data to cutout.
+
         """
 
         if self.full_size:
-            return url_to_local_file(url)
+            return url_to_local_file(url), wcs_ext, data_ext
 
         fits_image_path = generate_cache_filename(url, str(self), "fits")
 
         # file exists?  done!
         if os.path.exists(fits_image_path):
-            return fits_image_path
+            return fits_image_path, 0, 0
 
         # output data object
         result = fits.HDUList()
@@ -208,7 +214,7 @@ class CutoutSpec:
 
         os.chmod(fits_image_path, 33204)
 
-        return fits_image_path
+        return fits_image_path, 0, 0
 
 
 def filename_suffix(cutout_spec: CutoutSpec, format: ImageFormat) -> str:
@@ -245,6 +251,8 @@ def create_browse_image(
     output_image: str,
     format: ImageFormat,
     align: bool,
+    wcs_ext: int,
+    data_ext: int,
 ) -> None:
     """Create the browse (JPEG, PNG) image.
 
@@ -263,18 +271,35 @@ def create_browse_image(
     align : bool
         Align the image with north up.
 
+    wcs_ext : int
+        The FITS HDU extension with the WCS.
+
+    data_ext : int
+        The FITS HDU extension with the data to cutout.
+    
     """
 
     format = ImageFormat(format)
 
     hdul = fits.open(input_image, "readonly")
-    data = hdul[0].data
+    data = hdul[data_ext].data
+
+    h = hdul[wcs_ext].header
+
+    # These keywords (e.g., in NEAT data) trigger DSS mode in wcslib... avoid
+    # that:
+    if "XPIXELSZ" in h:
+        del h["XPIXELSZ"]
+    if "YPIXELSZ" in h:
+        del h["YPIXELSZ"]
+
+    # current wcs
+    wcs0 = WCS(h)
+
+    # correction for 
 
     # align with north up?
     if align:
-        # current WCS
-        wcs0 = WCS(hdul[0].header)
-
         # Recall that CRPIX is a 1-based index:
         crpix = np.array(data.shape) / 2
         crval = wcs0.pixel_to_world_values(*crpix)
@@ -285,7 +310,10 @@ def create_browse_image(
         wcs.wcs.ctype = "RA---TAN", "DEC--TAN"
         wcs.wcs.crpix = crpix
         wcs.wcs.crval = crval
-        pix_scale = np.sqrt(np.abs(np.linalg.det(wcs0.wcs.pc)))
+        try:
+            pix_scale = np.sqrt(np.abs(np.linalg.det(wcs0.wcs.pc)))
+        except AttributeError:
+            pix_scale = np.mean(np.abs(wcs0.wcs.cdelt))
         pc = np.array([[-1, 0], [0, 1]]) * pix_scale
         wcs.wcs.pc = pc
 
@@ -299,7 +327,7 @@ def create_browse_image(
             parallel=True,
         )
     else:
-        wcs = WCS(hdul[0].header)
+        wcs = wcs0
 
     # zscale, stretch to 0 to 255, and convert to unsigned int, save
     interval = ZScaleInterval()
@@ -387,8 +415,8 @@ def image_query(
         wcs_ext = 1
         data_ext = 1
 
-    # generate the cutout, as needed
-    fits_image_path = cutout_spec.cutout(
+    # generate the cutout, as needed; potentially update wcs and data extension indices
+    fits_image_path, wcs_ext, data_ext = cutout_spec.cutout(
         obs_id,
         im.image_url,
         wcs_ext,
@@ -404,13 +432,7 @@ def image_query(
         im.image_url,
         str(cutout_spec),
         format.extension,
-        (
-            "align"
-            if (
-                align and format in (ImageFormat.JPEG, ImageFormat.JPG, ImageFormat.PNG)
-            )
-            else ""
-        ),
+        str(align and format in (ImageFormat.JPEG, ImageFormat.JPG, ImageFormat.PNG)),
     )
 
     # was this file already generated?  serve it!
@@ -418,7 +440,7 @@ def image_query(
         return image_path, download_filename
 
     # create the jpeg or png
-    create_browse_image(fits_image_path, image_path, format, align)
+    create_browse_image(fits_image_path, image_path, format, align, wcs_ext, data_ext)
 
     # rw-rw-r--
     # In [16]: (stat.S_IFREG | stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH)
