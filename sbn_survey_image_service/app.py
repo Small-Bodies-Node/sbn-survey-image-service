@@ -53,6 +53,7 @@ def handle_sbnsis_error(error: Exception):
     get_logger().exception("SBS Survey Image Service error.")
     return str(error), getattr(error, "code", 500)
 
+
 @application.errorhandler(Exception)
 def handle_other_error(error: Exception):
     """Log errors."""

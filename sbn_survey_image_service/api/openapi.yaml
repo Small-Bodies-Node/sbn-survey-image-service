@@ -62,7 +62,7 @@ paths:
             pattern: '^\d+(\.\d*)?(arcsec|arcmin|deg|degree|rad|radian)$'
         - name: align
           in: query
-          description: "Rotate JPEG- or PNG-formatted images to align equatorial north with the image up direction.  Otherwise the image will have the same orientation as the native FITS data (drawn with the origin in the lower left)."
+          description: "Rotate JPEG- or PNG-formatted cutouts to align equatorial north with the image up direction.  Otherwise the image will have the same orientation as the native FITS data (drawn with the origin in the lower left).  Align is not allowed for full-frame images."
           example: false
           required: false
           allowEmptyValue: false

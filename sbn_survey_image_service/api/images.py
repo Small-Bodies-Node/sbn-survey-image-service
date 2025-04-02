@@ -43,10 +43,15 @@ def get_image(
     )
 
     # Either define all, or none
-    cutout_params_exist = [p is None for p in (ra, dec, size)]
+    cutout_params_exist = [p is not None for p in (ra, dec, size)]
     if not all(cutout_params_exist) and any(cutout_params_exist):
         raise ParameterValueError(
             "If one of ra, dec, or size is defined, then all must be defined."
+        )
+
+    if align and not any(cutout_params_exist):
+        raise ParameterValueError(
+            "align=true is only allowed for cutouts."
         )
 
     align_requires = ["jpeg", "png"]
