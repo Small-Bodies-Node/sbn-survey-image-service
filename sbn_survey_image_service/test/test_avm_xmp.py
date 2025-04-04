@@ -31,7 +31,7 @@ def test_avm_xmp():
         # convert the FITS to JPEG and verify the XMP metadata
         with tempfile.NamedTemporaryFile("w+b", delete=False) as imf:
             imf.close()
-            create_browse_image(dataf.name, imf.name, "jpeg", False)
+            create_browse_image(dataf.name, imf.name, "jpeg", False, 0, 0)
 
             avm = AVM.from_image(imf.name)
 

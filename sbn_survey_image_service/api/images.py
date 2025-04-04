@@ -50,9 +50,7 @@ def get_image(
         )
 
     if align and not any(cutout_params_exist):
-        raise ParameterValueError(
-            "align=true is only allowed for cutouts."
-        )
+        raise ParameterValueError("align=true is only allowed for cutouts.")
 
     align_requires = ["jpeg", "png"]
     if align and format.lower() not in align_requires:
