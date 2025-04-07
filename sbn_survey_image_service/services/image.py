@@ -428,7 +428,11 @@ def image_query(
         im.image_url,
         str(cutout_spec),
         format.extension,
-        str(align and format in (ImageFormat.JPEG, ImageFormat.JPG, ImageFormat.PNG)),
+        str(
+            not cutout_spec.full_size
+            and align
+            and format in (ImageFormat.JPEG, ImageFormat.JPG, ImageFormat.PNG)
+        ),
     )
 
     # was this file already generated?  serve it!

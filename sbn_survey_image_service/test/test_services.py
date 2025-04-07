@@ -68,6 +68,7 @@ def test_image_query_full_frame_jpg():
         "file://" + os.path.join(ENV.TEST_DATA_PATH, "test-000023.fits"),
         "full_size",
         "jpeg",
+        "False",
     )
 
     # should return a file in the cache directory
@@ -87,6 +88,7 @@ def test_image_query_full_frame_png():
         "file://" + os.path.join(ENV.TEST_DATA_PATH, "test-000023.fits"),
         "full_size",
         "png",
+        "False",
     )
 
     # should return a file in the cache directory
@@ -157,7 +159,7 @@ def test_create_browse_image_alignment():
         # convert the FITS to JPEG and verify the orientation
         with tempfile.NamedTemporaryFile("w+b", delete=False) as imf:
             imf.close()
-            create_browse_image(dataf.name, imf.name, "jpeg", False)
+            create_browse_image(dataf.name, imf.name, "jpeg", False, 0, 0)
             data = np.array(Image.open(imf.name, formats=["jpeg"]))
             # JPEGs are drawn top to bottom, so the 1111111 row is first in the
             # array
@@ -167,7 +169,7 @@ def test_create_browse_image_alignment():
         # convert FITS to JPEG with north up
         with tempfile.NamedTemporaryFile("w+b", delete=False) as alignedf:
             alignedf.close()
-            create_browse_image(dataf.name, alignedf.name, "jpeg", True)
+            create_browse_image(dataf.name, alignedf.name, "jpeg", True, 0, 0)
             data = np.array(Image.open(alignedf.name, formats=["jpeg"]))
             # now the 1111111 row is last
             assert all(data[0, :] == 255)
