@@ -21,7 +21,8 @@ def test_avm_xmp():
     wcs.wcs.ctype = "RA---TAN", "DEC--TAN"
     wcs.wcs.crpix = (3, 4)
     wcs.wcs.crval = (10, 20)
-    wcs.wcs.pc = [[0.5, 0], [0, -0.5]]
+    wcs.wcs.pc = [[1, 0], [0, 1]]
+    wcs.wcs.cdelt = -0.5, 0.5
 
     with tempfile.NamedTemporaryFile("w+b", delete=False) as dataf:
         # write our test data to a FITS file
@@ -35,13 +36,14 @@ def test_avm_xmp():
 
             avm = AVM.from_image(imf.name)
 
+    expected_reference_value = wcs.pixel_to_world_values(5, 5)
     assert avm.Spatial.CoordinateFrame == "ICRS"
-    assert avm.Spatial.ReferenceValue[0] == 10
-    assert avm.Spatial.ReferenceValue[1] == 20
-    assert avm.Spatial.ReferencePixel[0] == 3
-    assert avm.Spatial.ReferencePixel[1] == 4
-    assert avm.Spatial.Scale[0] == 0.5
-    assert avm.Spatial.Scale[1] == -0.5
+    assert avm.Spatial.ReferenceValue[0] == expected_reference_value[0]
+    assert avm.Spatial.ReferenceValue[1] == expected_reference_value[1]
+    assert avm.Spatial.ReferencePixel[0] == 5
+    assert avm.Spatial.ReferencePixel[1] == 5
+    assert avm.Spatial.Scale[0] == -0.5
+    assert avm.Spatial.Scale[1] == 0.5
     assert avm.Spatial.Rotation == 0
     assert avm.Spatial.CoordsystemProjection == "TAN"
     assert avm.Spatial.Quality == "Full"

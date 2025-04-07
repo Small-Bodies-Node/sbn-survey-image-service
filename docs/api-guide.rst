@@ -79,6 +79,7 @@ data from another collection (...58476), separated into the Mauna Loa and
 Haleakala telescopes.  There are 994 data products from the Mauna Loa telescope
 in the ``urn:nasa:pds:gbo.ast.atlas.survey.234:58476`` data collection.
 
+
 Find data products in a collection
 ----------------------------------
 
@@ -182,6 +183,8 @@ To return a JPEG formatted image, use the ``format=jpeg`` option:
     https://sbnsurveys.astro.umd.edu/api/images/urn:nasa:pds:gbo.ast.neat.survey:data_tricam:p20020222_obsdata_20020222120052c?ra=174.62244&dec=17.97594&size=5arcmin
 
 .. image:: _static/20020222120052c.fit_174.62244+17.97594_5arcmin.jpeg
+
+All image cutouts are reprojected to a new world coordinate system with a gnomonic projection at the center of the image.  The reprojection uses nearest-neighbor interpolation.  Users needed higher fidelity images instead use a FITS-formatted cutout.
 
 
 Image metadata

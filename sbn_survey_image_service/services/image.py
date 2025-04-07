@@ -294,36 +294,31 @@ def create_browse_image(
     # current wcs
     wcs0 = WCS(h)
 
-    # align with north up?
+    # new wcs based on image center
+    # Recall that CRPIX is a 1-based index:
+    crpix = np.array(data.shape) / 2
+    crval = wcs0.pixel_to_world_values(*crpix)
+    wcs = WCS()
+    wcs.pixel_shape = data.shape
+    wcs.wcs.ctype = "RA---TAN", "DEC--TAN"
+    wcs.wcs.crpix = crpix
+    wcs.wcs.crval = crval
+    wcs.wcs.pc = wcs0.wcs.get_pc()
+    wcs.wcs.cdelt = wcs0.wcs.get_cdelt()
+
     if align:
-        # Recall that CRPIX is a 1-based index:
-        crpix = np.array(data.shape) / 2
-        crval = wcs0.pixel_to_world_values(*crpix)
+        # align with north up
+        wcs.wcs.pc = np.array([[-1, 0], [0, 1]])
 
-        # aligned WCS
-        wcs = WCS()
-        wcs.pixel_shape = data.shape
-        wcs.wcs.ctype = "RA---TAN", "DEC--TAN"
-        wcs.wcs.crpix = crpix
-        wcs.wcs.crval = crval
-        try:
-            pix_scale = np.sqrt(np.abs(np.linalg.det(wcs0.wcs.pc)))
-        except AttributeError:
-            pix_scale = np.mean(np.abs(wcs0.wcs.cdelt))
-        pc = np.array([[-1, 0], [0, 1]]) * pix_scale
-        wcs.wcs.pc = pc
-
-        # reproject to the new WCS
-        data = reproject_interp(
-            (data, wcs0),
-            wcs,
-            shape_out=data.shape,
-            return_footprint=False,
-            order="nearest-neighbor",
-            parallel=True,
-        )
-    else:
-        wcs = wcs0
+    # reproject to the new WCS
+    data = reproject_interp(
+        (data, wcs0),
+        wcs,
+        shape_out=data.shape,
+        return_footprint=False,
+        order="nearest-neighbor",
+        parallel=True,
+    )
 
     # zscale, stretch to 0 to 255, and convert to unsigned int, save
     interval = ZScaleInterval()
