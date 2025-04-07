@@ -7,7 +7,6 @@ import os
 from copy import copy
 import warnings
 from enum import Enum
-from typing import BinaryIO
 
 from PIL import Image as PIL_Image
 from sqlalchemy.orm.exc import NoResultFound
@@ -29,7 +28,6 @@ from ..models.image import Image
 from ..config.exceptions import InvalidImageID, ParameterValueError
 from . import network
 
-order = ("nearest-neighbor",)
 from .. import __version__ as sis_version
 
 
