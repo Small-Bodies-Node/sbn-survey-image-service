@@ -144,12 +144,14 @@ def test_create_browse_image_alignment():
     im = np.zeros((10, 10))
     im[0, :] = 1  # first row is 1111111
 
+    # north down, east right
     wcs = WCS()
     wcs.pixel_shape = im.shape
     wcs.wcs.ctype = "RA---TAN", "DEC--TAN"
     wcs.wcs.crpix = (3, 4)
     wcs.wcs.crval = (10, 20)
-    wcs.wcs.pc = [[0.5, 0], [0, -0.5]]
+    wcs.wcs.pc = [[-1, 0], [0, -1]]
+    wcs.wcs.cdelt = -0.5, 0.5
 
     with tempfile.NamedTemporaryFile("w+b", delete=False) as dataf:
         # write our test data to a FITS file
@@ -161,7 +163,7 @@ def test_create_browse_image_alignment():
             imf.close()
             create_browse_image(dataf.name, imf.name, "jpeg", False, 0, 0)
             data = np.array(Image.open(imf.name, formats=["jpeg"]))
-            # JPEGs are drawn top to bottom, so the 1111111 row is first in the
+            # JPEGs are drawn top to bottom, so the 1111111 row is last in the
             # array
             assert all(data[0, :] == 0)
             assert all(data[-1, :] == 255)
@@ -171,7 +173,7 @@ def test_create_browse_image_alignment():
             alignedf.close()
             create_browse_image(dataf.name, alignedf.name, "jpeg", True, 0, 0)
             data = np.array(Image.open(alignedf.name, formats=["jpeg"]))
-            # now the 1111111 row is last
+            # now the 1111111 row is first
             assert all(data[0, :] == 255)
             assert all(data[-1, :] == 0)
 

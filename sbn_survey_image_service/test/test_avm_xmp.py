@@ -36,12 +36,12 @@ def test_avm_xmp():
 
             avm = AVM.from_image(imf.name)
 
-    expected_reference_value = wcs.pixel_to_world_values(5, 5)
+    expected_reference_value = wcs.pixel_to_world_values(4.5, 4.5)  # 0-based
     assert avm.Spatial.CoordinateFrame == "ICRS"
     assert avm.Spatial.ReferenceValue[0] == expected_reference_value[0]
     assert avm.Spatial.ReferenceValue[1] == expected_reference_value[1]
-    assert avm.Spatial.ReferencePixel[0] == 5
-    assert avm.Spatial.ReferencePixel[1] == 5
+    assert avm.Spatial.ReferencePixel[0] == 5.5  # 1-based
+    assert avm.Spatial.ReferencePixel[1] == 5.5
     assert avm.Spatial.Scale[0] == -0.5
     assert avm.Spatial.Scale[1] == 0.5
     assert avm.Spatial.Rotation == 0

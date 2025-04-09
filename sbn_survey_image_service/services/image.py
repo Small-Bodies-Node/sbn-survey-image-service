@@ -295,9 +295,9 @@ def create_browse_image(
     wcs0 = WCS(h)
 
     # new wcs based on image center
-    # Recall that CRPIX is a 1-based index:
-    crpix = np.array(data.shape) / 2
-    crval = wcs0.pixel_to_world_values(*crpix)
+    # Given that CRPIX is a 1-based index:
+    crpix = np.array(data.shape) / 2 + 0.5
+    crval = wcs0.pixel_to_world_values(*(crpix - 1))
     wcs = WCS()
     wcs.pixel_shape = data.shape
     wcs.wcs.ctype = "RA---TAN", "DEC--TAN"
@@ -308,7 +308,8 @@ def create_browse_image(
 
     if align:
         # align with north up
-        wcs.wcs.pc = np.array([[-1, 0], [0, 1]])
+        wcs.wcs.pc = np.array([[1, 0], [0, 1]])
+        wcs.wcs.cdelt = -np.abs(wcs.wcs.cdelt[0]), np.abs(wcs.wcs.cdelt[1])
 
     # reproject to the new WCS
     data = reproject_interp(
