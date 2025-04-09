@@ -27,3 +27,8 @@ docs/_build/**
 *.db
 
 activate
+
+**/node_modules/**/*
+examples/**/*jpeg
+examples/**/*png
+examples/**/*fits

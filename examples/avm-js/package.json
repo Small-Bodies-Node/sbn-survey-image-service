@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "@xmldom/xmldom": "^0.9.8",
+    "exifreader": "^4.27.0"
+  },
+  "type": "module"
+}
