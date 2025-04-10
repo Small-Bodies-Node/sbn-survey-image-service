@@ -307,9 +307,9 @@ def create_browse_image(
     wcs.wcs.cdelt = wcs0.wcs.get_cdelt()
 
     if align:
-        # align with north up
-        wcs.wcs.pc = np.array([[1, 0], [0, 1]])
-        wcs.wcs.cdelt = -np.abs(wcs.wcs.cdelt[0]), np.abs(wcs.wcs.cdelt[1])
+        # align with north up, east left
+        wcs.wcs.pc = np.array([[-1, 0], [0, 1]])
+        wcs.wcs.cdelt = [np.abs(x.value) for x in wcs0.proj_plane_pixel_scales()]
 
     # reproject to the new WCS
     data = reproject_interp(

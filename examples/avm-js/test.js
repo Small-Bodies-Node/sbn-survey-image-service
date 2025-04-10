@@ -38,6 +38,16 @@ const aligned = {
   file: "aligned.png",
 };
 
+const atlas = {
+  id: "urn:nasa:pds:gbo.ast.atlas.survey.242:58719:02a58719o0648o.fits",
+  format: "jpeg",
+  ra: 83.63333333333333,
+  dec: 22.013333333333332,
+  size: "5arcmin",
+  align: false,
+  file: "atlas.jpeg",
+};
+
 /**
  * Fetch an image from the SBN SIS API.
  */
@@ -58,6 +68,24 @@ async function fetchImage({ file, id, format, ra, dec, size, align }) {
     .then(() => console.log(`${file} \x1b[32m✓\x1b[0m`));
 }
 
+/** Debug messages: to log, or not to log? */
+const debug = (...msg) => {
+  if (DEBUG) console.debug(...msg);
+};
+
+/** simple comparison function */
+const compare = (label, a, b, tol) => {
+  const passed = Math.abs(a - b) < tol;
+  debug(
+    label,
+    "=",
+    a.toFixed(6),
+    (a - b).toFixed(6),
+    passed ? "\x1b[32mpassed\x1b[0m" : "\x1b[31mfailed\x1b[0m"
+  );
+  return passed;
+};
+
 /**
  * Test separation and position angle from WCS reference value, and WCS
  * transformed pixel position.
@@ -66,21 +94,6 @@ async function fetchImage({ file, id, format, ra, dec, size, align }) {
  * @param phi0 expected position angle [radians]
  */
 function test(label, wcs, ra, dec, rho0, phi0, x0, y0) {
-  const debug = (...msg) => {
-    if (DEBUG) console.debug(...msg);
-  };
-
-  const compare = (label, a, b, tol) => {
-    const passed = Math.abs(a - b) < tol;
-    debug(
-      label,
-      "=",
-      a.toFixed(6),
-      (a - b).toFixed(6),
-      passed ? "\x1b[32mpassed\x1b[0m" : "\x1b[31mfailed\x1b[0m"
-    );
-    return passed;
-  };
 
   process.stdout.write("\x1b[35mTesting " + label + "\x1b[0m ");
 
@@ -117,11 +130,31 @@ function test(label, wcs, ra, dec, rho0, phi0, x0, y0) {
   if (!passed && STOP_ON_ERROR) throw "failure";
 }
 
+/**
+ * ATLAS specific tests.
+ */
+function test_atlas(wcs)
+{
+  process.stdout.write("\x1b[35mTesting ATLAS\x1b[0m ");
+  // expected value computed from astropy
+  let passed = compare("\nx pixel scale", wcs.scale[0], -0.0005173, 0.0000001);
+  passed *= compare("y pixel scale", wcs.scale[1], 0.0005173, 0.0000001);
+  // expected value from mskpy.util.getrot
+  passed *= compare("rotation", wcs.rotation, -179.83 * Math.PI / 180, 0.001);
+  console.log(
+    "...",
+    passed ? "\x1b[32mpassed\x1b[0m" : "\x1b[31mfailed\x1b[0m"
+  );
+
+  if (!passed && STOP_ON_ERROR) throw "failure";
+}
+
 console.log("\n\x1b[36m===== js-xmp-example tests =====\x1b[0m");
 
 console.log("\n\x1b[36m----- Fetch files -----\x1b[0m");
 await fetchImage({ ...unaligned });
 await fetchImage({ ...aligned });
+await fetchImage({ ...atlas });
 
 // Get WCS from the unaligned file
 console.log("\n\x1b[36m----- Unaligned WCS -----\x1b[0m");
@@ -217,5 +250,16 @@ test("270°", rotWCS, 10, 1, 1, 0, 4, 3);
 
 rotWCS.rotation += Math.PI / 4;
 test("315°", rotWCS, 10, Math.SQRT2, Math.SQRT2, 0, 4, 2);
+
+// Get WCS from the atlas file, which uses a CD matrix
+console.log("\n\x1b[36m----- ATLAS WCS -----\x1b[0m");
+xmp = await ExifReader.load(atlas.file, {
+  domparser: new DOMParser({ onError: onErrorStopParsing }),
+});
+
+if (DEBUG) console.log(xmp);
+
+const atlasWCS = getWCSfromXMP(xmp);
+test_atlas(atlasWCS);
 
 console.log();

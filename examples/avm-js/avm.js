@@ -9,13 +9,30 @@ export function getWCSfromXMP(xmp) {
     return [Number(xmp[k].value[0].value), Number(xmp[k].value[1].value)];
   };
 
-  return {
+  const wcs = {
     referenceValue: getTwo(xmp, "Spatial.ReferenceValue"), // world coordinates at referencePixel, degrees
     referencePixel: getTwo(xmp, "Spatial.ReferencePixel"), // pixel coordinates at referenceValue
-    scale: getTwo(xmp, "Spatial.Scale"), // degrees / pixel
-    rotation: (Math.PI / 180) * Number(xmp["Spatial.Rotation"].value), // radians
     size: [xmp["Image Width"].value, xmp["Image Height"].value], // pixels
   };
+
+  // scale and rotation may be in CDMatrix or Scale+Rotation
+  if (xmp["Spatial.CDMatrix"] !== undefined) {
+    const cd = [[Number(xmp["Spatial.CDMatrix"].value[0].value), Number(xmp["Spatial.CDMatrix"].value[1].value)],
+                [Number(xmp["Spatial.CDMatrix"].value[2].value), Number(xmp["Spatial.CDMatrix"].value[3].value)]];
+
+    const det = cd[0][0] * cd[1][1] - cd[0][1] * cd[1][0];
+    const sign = Math.sign(det);
+    const scale = Math.sqrt(Math.abs(det));
+    const rot = Math.atan2(sign * Math.PI / 180 * cd[0][1], sign * Math.PI / 180 * cd[0][0]);
+    
+    wcs.scale = [-scale, scale]; // degrees / pixel
+    wcs.rotation = rot; // radians
+  } else {
+    wcs.scale = getTwo(xmp, "Spatial.Scale"); // degrees / pixel
+    wcs.rotation = (Math.PI / 180) * Number(xmp["Spatial.Rotation"].value); // radians
+  }
+
+  return wcs;
 }
 
 /**
