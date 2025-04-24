@@ -23,7 +23,7 @@ const wcs = getWCSfromXMP(xmp);
 // convert RA and Dec to pixel coordinates:
 //   * (x, y) = (1, 1) is the upper-left corner on the screen
 //   * integer coordinates refer to the center of the pixel
-const [x, y] = world_to_pixel(83.633333, 22.013333);
+const [x, y] = world_to_pixel(wcs, 83.633333, 22.013333);
 ```
 
 ## Testing
