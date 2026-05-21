@@ -8,25 +8,24 @@ dynamic = ["version"]
 requires-python = ">=3.11"
 
 dependencies = [
-    "astropy>=6.0",
+    "astropy>=7.1.2",
     "fsspec>=2024.10.0",
     "aiohttp>=3.10",
     "requests>=2.32",
     "Pillow>=11.0",
-    "connexion[flask,swagger-ui,uvicorn]~=3.2",
-    "gunicorn~=23.0",
+    "connexion[flask,swagger-ui,uvicorn]~=3.3.0",
+    "gunicorn~=26.0",
     "pds4_tools==1.4",
     "pytest-remotedata>=0.4",
-    "python-dotenv~=1.0",
+    "python-dotenv~=1.2",
     "reproject>=0.14",
     "SQLAlchemy>=2.0",
     "pyavm>=0.9.6",
 ]
 
 [project.optional-dependencies]
-recommended = ["psycopg2-binary>=2.8"]
 dev = ["black", "mypy", "pycodestyle"]
-test = ["pytest>=7.0", "pytest-cov>=3.0"]
+test = ["pytest>=8.0", "pytest-cov>=7.0"]
 docs = ["sphinx", "sphinx-automodapi", "numpydoc"]
 
 [project.urls]
