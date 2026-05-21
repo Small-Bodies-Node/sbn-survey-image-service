@@ -330,7 +330,7 @@ def create_browse_image(
     hdul.close()
 
     # annotate with XMP-formatted WCS
-    avm = AVM.from_wcs(wcs)
+    avm = AVM.from_wcs(wcs, shape=data.shape)
     avm.embed(output_image, output_image)
 
 
