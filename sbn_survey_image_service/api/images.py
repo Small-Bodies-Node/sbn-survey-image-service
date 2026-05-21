@@ -86,4 +86,5 @@ def get_image(
         mimetype=mime_type,
         as_attachment=download,
         download_name=download_filename,
+        max_age=864000,
     )
