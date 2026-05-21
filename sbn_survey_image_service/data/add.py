@@ -9,12 +9,12 @@ import os
 import logging
 import argparse
 from urllib.parse import urlparse, urlunparse
-from typing import Dict, List
-import xml.etree.ElementTree as ET
 
 import numpy as np
-from sqlalchemy.orm.session import Session
+from astropy.time import Time
 from pds4_tools.reader.read_label import read_label as pds4_read_label
+from sqlalchemy.orm.session import Session
+import xml.etree.ElementTree as ET
 
 from ..config.exceptions import (
     LabelError,
@@ -185,6 +185,7 @@ def pds4_image(label_path: str) -> Image:
                 os.path.dirname(label_path),
                 label.find("File_Area_Observational/File/file_name").text,
             ),
+            date=Time.now().iso,
         )
     except AttributeError as exc:
         # probably not a useful label
@@ -218,11 +219,11 @@ def pds4_pixel_scale(label: ET.ElementTree) -> float | None:
     if wcs is None:
         return None
 
-    matches: List[ET.ElementTree] = wcs.findall(
+    matches: list[ET.ElementTree] = wcs.findall(
         "ebt:Coordinate_Frame_Transformation_Matrix/ebt:Transformation_Element/ebt:element_value",
         namespaces={"ebt": "http://pds.nasa.gov/pds4/ebt/v1"},
     )
-    elements: List[float] = [float(x.text) for x in matches]
+    elements: list[float] = [float(x.text) for x in matches]
 
     if len(elements) != 4:
         return None
@@ -265,7 +266,7 @@ def add_directory(
     path: str,
     session: Session,
     recursive: bool = False,
-    extensions: List[str] | None = None,
+    extensions: list[str] | None = None,
     **kwargs,
 ) -> None:
     """Search directory for labels and add to database.
@@ -302,7 +303,7 @@ def add_directory(
     for contents in os.walk(path):
         n_dirs += 1
         dirpath: str = contents[0]
-        filenames: List[str] = contents[2]
+        filenames: list[str] = contents[2]
         filename: str
         for filename in filenames:
             if os.path.splitext(filename)[1].lower() in extensions:
