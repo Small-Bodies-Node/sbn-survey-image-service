@@ -11,6 +11,7 @@ from PIL import Image
 import numpy as np
 from astropy.wcs import WCS
 from astropy.io import fits
+from astropy.time import Time
 from astropy.coordinates import Angle
 
 from ..data.test import generate
@@ -18,6 +19,7 @@ from ..data import generate_cache_filename
 from ..services.database_provider import data_provider_session
 from ..services.image import image_query, create_browse_image
 from ..services.label import label_query
+from ..services.metadata import metadata_query
 from ..config.env import ENV
 from ..config.exceptions import InvalidImageID, ParameterValueError
 
@@ -31,7 +33,7 @@ def dummy_data():
             generate.create_data(session, ENV.TEST_DATA_PATH)
 
 
-def test_label_query():
+def test_label_query(dummy_data):
     image_path: str
     download_filename: str
     image_path, download_filename = label_query(
@@ -179,3 +181,65 @@ def test_create_browse_image_alignment():
 
     for f in (dataf, imf, alignedf):
         os.unlink(f.name)
+
+
+def test_metadata_query_collection(dummy_data):
+    count, matches = metadata_query(collection="urn:nasa:pds:survey:test-collection")
+    assert count == 404
+    for match in matches:
+        assert match["collection"] == "urn:nasa:pds:survey:test-collection"
+
+
+def test_metadata_query_facility(dummy_data):
+    count, matches = metadata_query(facility="Test Telescope")
+    assert count == 404
+    for match in matches:
+        assert match["facility"] == "Test Telescope"
+
+
+def test_metadata_query_instrument(dummy_data):
+    count, matches = metadata_query(instrument="Test CCD")
+    assert count == 404
+    for match in matches:
+        assert match["instrument"] == "Test CCD"
+
+
+def test_metadata_query_dptype(dummy_data):
+    count, matches = metadata_query(dptype="image")
+    assert count == 404
+    for match in matches:
+        assert match["dptype"] == "image"
+
+
+def test_metadata_query_after_before(dummy_data):
+    opts = {"collection": "urn:nasa:pds:survey:test-collection", "maxrec": 1000}
+    count, matches = metadata_query(**opts)
+
+    dates = Time(sorted([match["date"] for match in matches]))
+    mid = dates[dates < Time(np.median(dates.mjd), format="mjd")][-1]
+
+    count, matches = metadata_query(after=mid.iso, **opts)
+    assert count == sum(dates > mid)
+    for match in matches:
+        assert match["date"] > mid.iso
+
+    count, matches = metadata_query(before=mid, **opts)
+    assert count == sum(dates < mid)
+    for match in matches:
+        assert match["date"] < mid.iso
+
+    now = Time.now()
+    count, matches = metadata_query(before=now, **opts)
+    assert count == 404
+    for match in matches:
+        assert match["date"] < now
+
+    count, _ = metadata_query(after=now, **opts)
+    assert count == 0
+
+    count, _ = metadata_query(before=dates[0].iso, **opts)
+    assert count == 0
+
+    after, _, before = sorted(set(dates.iso))[:3]
+    count, _ = metadata_query(after=after, before=before, **opts)
+    assert count == sum((dates > after) * (dates < before))

@@ -129,6 +129,24 @@ paths:
           allowEmptyValue: false
           schema:
             type: string
+        - name: after
+          in: query
+          description: Query for data added after this date and time, "YYYY-MM-DD HH:MM:SS.SSS" format; date is required, time and seconds are optional
+          required: false
+          allowEmptyValue: false
+          schema:
+            type: string
+            minLength: 10
+            maxLength: 23
+        - name: before
+          in: query
+          description: Query for data added before this date and time, "YYYY-MM-DD HH:MM:SS.SSS" format; date is required, time and seconds are optional
+          required: false
+          allowEmptyValue: false
+          schema:
+            type: string
+            minLength: 10
+            maxLength: 23
         - name: format
           in: query
           description: Specify the format of the response from the access URL
