@@ -93,6 +93,11 @@ class Image(Base):
         URL to the data product label.
     """
 
+    date: str = Column(String, nullable=False)
+    """
+        Date row was updated.
+    """
+
     def __repr__(self) -> str:
         return f"Image(obs_id='{self.obs_id}', image_url='{self.image_url}', label_url='{self.label_url}')"
 

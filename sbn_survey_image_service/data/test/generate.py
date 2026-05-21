@@ -11,7 +11,7 @@ import sys
 import logging
 import argparse
 from importlib import resources
-from typing import Any, List, Tuple
+from typing import Any
 
 import numpy as np
 from sqlalchemy.orm.session import Session
@@ -60,7 +60,7 @@ def spherical_distribution(N: int) -> np.ndarray:
     Mth: int = int(np.round(pi / d))
     dth: float = pi / Mth
     dph: float = a / dth
-    p: List[Tuple[float, float]] = []
+    p: list[tuple[float, float]] = []
     m: int
     for m in range(Mth):
         th: float = pi * (m + 0.5) / Mth

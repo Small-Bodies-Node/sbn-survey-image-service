@@ -4,7 +4,8 @@
 __all__ = ["metadata_query", "metadata_summary"]
 
 from urllib.parse import quote
-from typing import Any, List, Tuple
+from typing import Any
+from astropy.time import Time
 from .database_provider import data_provider_session, Session
 from ..models.image import Image
 from ..config.env import ENV
@@ -15,10 +16,12 @@ def metadata_query(
     facility: str | None = None,
     instrument: str | None = None,
     dptype: str | None = None,
+    after: str | None = None,
+    before: str | None = None,
     format: str = "fits",
     maxrec: int = 100,
     offset: int = 0,
-) -> Tuple[int, List[dict]]:
+) -> tuple[int, list[dict]]:
     """Query database for image metadata.
 
 
@@ -32,7 +35,7 @@ def metadata_query(
 
     """
 
-    matches: List[dict] = []
+    matches: list[dict] = []
 
     session: Session
     with data_provider_session() as session:
@@ -45,6 +48,10 @@ def metadata_query(
             query = query.filter(Image.instrument == instrument)
         if dptype is not None:
             query = query.filter(Image.data_product_type == dptype)
+        if after is not None:
+            query = query.filter(Image.date > Time(after).iso)
+        if before is not None:
+            query = query.filter(Image.date < Time(before).iso)
 
         count: int = query.count()
 
@@ -53,7 +60,7 @@ def metadata_query(
 
         query = query.offset(offset)
 
-        images: List[Image] = query.all()
+        images: list[Image] = query.all()
 
         url_base: str = ENV.PUBLIC_URL
         if ENV.IS_PRODUCTION.upper() != "TRUE":
@@ -72,6 +79,7 @@ def metadata_query(
                     "calibration_level": im.calibration_level,
                     "target": im.target,
                     "pixel_scale": im.pixel_scale,
+                    "date": im.date,
                     "access_url": f"{url_base}/images/{quote(im.obs_id)}?format={format}",
                 }
             )
@@ -79,7 +87,7 @@ def metadata_query(
     return count, matches
 
 
-def metadata_summary() -> List[dict]:
+def metadata_summary() -> list[dict]:
     """Summarize the database holdings.
 
 
@@ -90,9 +98,9 @@ def metadata_summary() -> List[dict]:
     """
 
     session: Session
-    summary: List[dict] = []
+    summary: list[dict] = []
     with data_provider_session() as session:
-        rows: List[dict] = (
+        rows: list[dict] = (
             session.query(Image.collection, Image.facility, Image.instrument)
             .distinct()
             .all()

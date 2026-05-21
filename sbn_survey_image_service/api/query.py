@@ -14,6 +14,8 @@ def run_query(
     facility: str | None = None,
     instrument: str | None = None,
     dptype: str | None = None,
+    after: str | None = None,
+    before: str | None = None,
     format: str = "fits",
     maxrec: int = 100,
     offset: int = 0,
@@ -46,6 +48,8 @@ def run_query(
         format=format,
         maxrec=maxrec,
         offset=offset,
+        after=after,
+        before=before,
     )
 
     return {"total": total, "offset": offset, "count": len(results), "results": results}
