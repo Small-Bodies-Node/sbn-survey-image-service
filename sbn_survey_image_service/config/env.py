@@ -7,7 +7,7 @@ import multiprocessing
 from typing import List
 from dotenv import load_dotenv, find_dotenv
 
-load_dotenv(find_dotenv(), override=True, verbose=True)
+load_dotenv(find_dotenv(raise_error_if_not_found=True), override=True, verbose=True)
 
 __all__: List[str] = ["ENV", "env_example"]
 
@@ -63,8 +63,7 @@ class SBNSISEnvironment:
 ENV: SBNSISEnvironment = SBNSISEnvironment()
 
 
-env_example: str = (
-    f"""
+env_example: str = f"""
 # sbnsis configuration
 
 ################
@@ -123,4 +122,3 @@ TEST_DATA_PATH={SBNSISEnvironment.TEST_DATA_PATH}
 # sbnsis will rotate any files matching "*.log" in the ./logging directory
 SBNSIS_LOG_FILE={SBNSISEnvironment.SBNSIS_LOG_FILE}
 """.strip()
-)
