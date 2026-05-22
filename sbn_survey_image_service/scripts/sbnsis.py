@@ -267,8 +267,6 @@ class SBNSISService:
             if len(sis_env.ENV.DB_USERNAME) > 0:
                 current.replace("# DB_USERNAME", "DB_USERNAME")
 
-            breakpoint()
-
             print(current)
 
     def create_tables(self) -> None:
