@@ -10,7 +10,7 @@ from argparse import ArgumentParser
 from sqlalchemy import MetaData
 
 from sbn_survey_image_service import models
-from sbn_survey_image_service.config.env import ENV, env_example
+from sbn_survey_image_service.config import env as sis_env
 from sbn_survey_image_service.services.database_provider import (
     db_engine,
     data_provider_session,
@@ -235,16 +235,41 @@ class SBNSISService:
         )
 
     def env_file(self) -> None:
-        if os.path.exists(".env") and not self.args.print:
+        """The default action is to show the current configuration.
+
+        Other actions are to save or print a .env file with the default values.
+
+        """
+        if self.args.save and os.path.exists(".env"):
             raise ServiceException("Politely refusing to overwrite .env.")
 
-        if self.args.print:
-            print(env_example)
-        else:
+        default = sis_env.env_format.format(env=sis_env.SBNSISEnvironment)
+
+        if self.args.save:
             with open(".env", "w") as outf:
-                outf.write(env_example)
+                outf.write(default)
                 outf.write("\n")
             print_color("Wrote new .env file.")
+            return
+
+        if self.args.default:
+            print(default)
+        else:
+            sis_env.ENV.DB_PASSWORD = (
+                "******" if len(sis_env.ENV.DB_PASSWORD) > 0 else ""
+            )
+
+            current = sis_env.env_format.format(env=sis_env.ENV)
+
+            # uncomment lines as needed
+            if len(sis_env.ENV.DB_PASSWORD) > 0:
+                current.replace("# DB_PASSWORD", "DB_PASSWORD")
+            if len(sis_env.ENV.DB_USERNAME) > 0:
+                current.replace("# DB_USERNAME", "DB_USERNAME")
+
+            breakpoint()
+
+            print(current)
 
     def create_tables(self) -> None:
         session: Session
@@ -281,7 +306,7 @@ class SBNSISService:
         parser: ArgumentParser = ArgumentParser(description="SBN Survey Image Service")
         subparsers = parser.add_subparsers(help="sub-command help")
 
-        # start #########
+        # start ################
         start_parser: ArgumentParser = subparsers.add_parser(
             "start", help="start the service"
         )
@@ -297,19 +322,19 @@ class SBNSISService:
         )
         start_parser.set_defaults(func=self.start)
 
-        # restart #######
+        # restart ##############
         restart_parser: ArgumentParser = subparsers.add_parser(
             "restart", help="restart the service"
         )
         restart_parser.set_defaults(func=self.restart)
 
-        # status ########
+        # status ###############
         status_parser: ArgumentParser = subparsers.add_parser(
             "status", help="get service status"
         )
         status_parser.set_defaults(func=self.status)
 
-        # stop ##########
+        # stop #################
         stop_parser: ArgumentParser = subparsers.add_parser(
             "stop", help="stop the service"
         )
@@ -321,24 +346,27 @@ class SBNSISService:
         )
         rotate_logs_parser.set_defaults(func=self.rotate_logs)
 
-        # env ##########
+        # env ##################
         env_parser: ArgumentParser = subparsers.add_parser(
-            "env", help="create a new .env file"
+            "env", help="manage the .env file"
         )
         env_parser.add_argument(
-            "--print",
+            "--save",
             action="store_true",
-            help="print the defaults, but do not save to .env",
+            help="create a .env file",
+        )
+        env_parser.add_argument(
+            "--default", action="store_true", help="show the default values"
         )
         env_parser.set_defaults(func=self.env_file)
 
-        # verify-tables ###############
+        # verify-tables ########
         verify_tables_parser: ArgumentParser = subparsers.add_parser(
             "verify-tables", help="verify database tables"
         )
         verify_tables_parser.set_defaults(func=self.verify_tables)
 
-        # create-tables ###############
+        # create-tables ########
         create_tables_parser: ArgumentParser = subparsers.add_parser(
             "create-tables", help="create database tables, as needed"
         )

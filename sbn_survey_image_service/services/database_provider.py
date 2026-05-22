@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """
-    Service class for querying SQL-DB
+Service class for querying SQL-DB
 """
 
 from typing import Iterator
@@ -14,7 +14,13 @@ from sqlalchemy.exc import SQLAlchemyError, DBAPIError
 from sqlalchemy.pool import NullPool
 
 from ..config.env import ENV
+from ..config.exceptions import SBNSISException
 from ..models import Base
+
+# Don't open a database if the environment was not configured
+if not ENV.is_configured():
+    raise SBNSISException("environment was not configured, create and edit a .env file")
+
 
 # Build URI and instantiate data-provider service
 db_engine_URI: str = (

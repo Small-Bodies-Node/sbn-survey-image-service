@@ -63,7 +63,7 @@ populated with the SIS defaults:
 
 .. code:: bash
 
-   sbnsis env
+   sbnsis env --save
 
 Edit the ``.env`` file as needed, following the comments.
 

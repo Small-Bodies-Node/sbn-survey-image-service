@@ -2,20 +2,26 @@
 
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import os
+import sys
 import inspect
 import multiprocessing
-from typing import List
 from dotenv import load_dotenv, find_dotenv
 
-load_dotenv(find_dotenv(raise_error_if_not_found=True), override=True, verbose=True)
+__all__ = ["ENV", "env_format"]
 
-__all__: List[str] = ["ENV", "env_example"]
+try:
+    dotenv_file = find_dotenv(raise_error_if_not_found=True, usecwd=True)
+    sys.stderr.write(f"Reading {dotenv_file}\n")
+    load_dotenv(dotenv_file, override=True, verbose=True)
+    env_configured = True
+except IOError:
+    env_configured = False
 
 
 class SBNSISEnvironment:
     """Defines environment variables and their defaults.
 
-    To add new variables, edit this class and `env_example`.
+    To add new variables, edit this class and `env_format`.
 
     """
 
@@ -59,11 +65,15 @@ class SBNSISEnvironment:
         if self.LIVE_GUNICORN_INSTANCES < 0:
             self.LIVE_GUNICORN_INSTANCES = multiprocessing.cpu_count() * 2
 
+    def is_configured(self) -> bool:
+        """Returns True if the .env file was successfully found."""
+        return env_configured
 
-ENV: SBNSISEnvironment = SBNSISEnvironment()
+
+ENV = SBNSISEnvironment()
 
 
-env_example: str = f"""
+env_format = """
 # sbnsis configuration
 
 ################
@@ -83,24 +93,24 @@ env_example: str = f"""
 #   Define as needed: DB_USERNAME, DB_PASSWORD, DB_DATABASE
 #
 
-DB_DIALECT={SBNSISEnvironment.DB_DIALECT}
-DB_HOST={SBNSISEnvironment.DB_HOST}
+DB_DIALECT={env.DB_DIALECT}
+DB_HOST={env.DB_HOST}
 # DB_USERNAME=username
 # DB_PASSWORD=password
-DB_DATABASE={SBNSISEnvironment.DB_DATABASE}
+DB_DATABASE={env.DB_DATABASE}
 
 # Local cache location for served data
-SBNSIS_CUTOUT_CACHE={SBNSISEnvironment.SBNSIS_CUTOUT_CACHE}
+SBNSIS_CUTOUT_CACHE={env.SBNSIS_CUTOUT_CACHE}
 
 ################################
 # Editing generally not needed #
 ################################
 
 # API CONFIG
-APP_NAME={SBNSISEnvironment.APP_NAME}
-API_HOST={SBNSISEnvironment.API_HOST}
-API_PORT={SBNSISEnvironment.API_PORT}
-BASE_HREF={SBNSISEnvironment.BASE_HREF}
+APP_NAME={env.APP_NAME}
+API_HOST={env.API_HOST}
+API_PORT={env.API_PORT}
+BASE_HREF={env.BASE_HREF}
 
 # URL used in production
 PUBLIC_URL=https://sbnsurveys.astro.umd.edu/api
@@ -109,16 +119,16 @@ PUBLIC_URL=https://sbnsurveys.astro.umd.edu/api
 # none
 
 # Cutout CONFIG
-MAXIMUM_CUTOUT_SIZE={SBNSISEnvironment.MAXIMUM_CUTOUT_SIZE}
+MAXIMUM_CUTOUT_SIZE={env.MAXIMUM_CUTOUT_SIZE}
 
 # Gunicorn settings
 # if LIVE_GUNICORN_INSTANCES==-1 then it's determined by CPU count
-LIVE_GUNICORN_INSTANCES={SBNSISEnvironment.LIVE_GUNICORN_INSTANCES}
+LIVE_GUNICORN_INSTANCES={env.LIVE_GUNICORN_INSTANCES}
 
 # local file path for generated test data set
-TEST_DATA_PATH={SBNSISEnvironment.TEST_DATA_PATH}
+TEST_DATA_PATH={env.TEST_DATA_PATH}
 
 # log file
 # sbnsis will rotate any files matching "*.log" in the ./logging directory
-SBNSIS_LOG_FILE={SBNSISEnvironment.SBNSIS_LOG_FILE}
+SBNSIS_LOG_FILE={env.SBNSIS_LOG_FILE}
 """.strip()
