@@ -1,7 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Survey image service logging.
-
-"""
+"""Survey image service logging."""
 
 import os
 import pathlib
