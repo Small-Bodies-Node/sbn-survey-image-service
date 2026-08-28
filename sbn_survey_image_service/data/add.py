@@ -228,10 +228,10 @@ def pds4_pixel_scale(label: ET.ElementTree) -> float | None:
     if len(elements) != 4:
         return None
 
-    cdelt: float = np.sqrt(
+    cdelt = np.sqrt(
         np.abs(elements[0] * elements[3]) + np.abs(elements[1] * elements[2])
     )
-    return cdelt
+    return float(cdelt)
 
 
 def test_valid_neat_image(label_path: str, label: ET.ElementTree) -> None:
