@@ -11,6 +11,7 @@ from sqlalchemy import MetaData
 
 from sbn_survey_image_service import models
 from sbn_survey_image_service.config import env as sis_env
+from sbn_survey_image_service.config.env import ENV
 from sbn_survey_image_service.services.database_provider import (
     db_engine,
     data_provider_session,
@@ -270,8 +271,7 @@ class SBNSISService:
             print(current)
 
     def create_tables(self) -> None:
-        session: Session
-        with data_provider_session() as session:
+        with data_provider_session():
             current: MetaData = MetaData()
             current.reflect(db_engine)
             models.Base.metadata.create_all(db_engine)
