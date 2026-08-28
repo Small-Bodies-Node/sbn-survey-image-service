@@ -93,7 +93,7 @@ class Image(Base):
         URL to the data product label.
     """
 
-    date: str = Column(String, nullable=False)
+    date: str = Column(String, nullable=False, index=True)
     """
         Date row was updated.
     """
