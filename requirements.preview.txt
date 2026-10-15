@@ -1,0 +1,7 @@
+# Only the isolated preview runner; no catalogue DB, production configuration or CAT.
+astropy>=6.0
+Flask>=3.0,<4
+requests>=2.32
+Pillow>=11.0
+reproject>=0.14
+pyavm>=0.9.6
