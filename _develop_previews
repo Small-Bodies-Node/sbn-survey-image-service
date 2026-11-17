@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd -- "$(dirname -- "${BASH_SOURCE[0]}")"
+if [[ -n "${CATCH_PREVIEW_PYTHON:-}" ]]; then
+  exec "$CATCH_PREVIEW_PYTHON" -m local_preview "$@"
+fi
+if ! command -v uv >/dev/null 2>&1; then
+  echo 'Install uv, or set CATCH_PREVIEW_PYTHON to a Python with requirements.preview.txt installed.' >&2
+  exit 1
+fi
+exec uv run --no-project --with-requirements requirements.preview.txt python -m local_preview "$@"

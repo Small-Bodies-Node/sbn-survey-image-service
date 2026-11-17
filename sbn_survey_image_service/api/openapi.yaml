@@ -8,6 +8,68 @@ info:
 servers:
   - url: {{base_href}}
 paths:
+  /previews/panstarrs:
+    get:
+      summary: North-up, east-left Pan-STARRS preview with exact cutout AVM WCS.
+      operationId: sbn_survey_image_service.api.panstarrs_preview.get_preview
+      parameters:
+        - in: query
+          name: image
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: ra
+          required: true
+          schema:
+            type: number
+            minimum: 0
+            maximum: 360
+            exclusiveMaximum: true
+        - in: query
+          name: dec
+          required: true
+          schema:
+            type: number
+            minimum: -90
+            maximum: 90
+        - in: query
+          name: size
+          required: true
+          description: Native cutout width in pixels, shared with the FITS URL.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 2048
+      responses:
+        "200":
+          description: PNG with AVM metadata for its rendered pixels.
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+        "400":
+          description: Invalid parameters or unsupported upstream image geometry.
+        "502":
+          description: Upstream preview is temporarily unavailable.
+  /previews/skymapper:
+    get:
+      summary: North-up, east-left SkyMapper DR4 PNG with the corresponding cutout WCS.
+      operationId: sbn_survey_image_service.api.skymapper_preview.get_preview
+      parameters:
+        - {name: image, in: query, required: true, schema: {type: string, pattern: '^\d{14}-\d{2}$'}}
+        - {name: ra, in: query, required: true, schema: {type: number, minimum: 0, maximum: 360}}
+        - {name: dec, in: query, required: true, schema: {type: number, minimum: -90, maximum: 90}}
+        - {name: size, in: query, required: true, description: Full cutout width in degrees (less than 10 arcmin)., schema: {type: number, minimum: 0, maximum: 0.16666666666666666}}
+      responses:
+        "200":
+          description: Canonical PNG. Scientific FITS remains on the original SkyMapper URL.
+          content:
+            image/png:
+              schema: {type: string, format: binary}
+        "400": {description: Invalid request or unverifiable PNG/FITS correspondence.}
+        "502": {description: Upstream SkyMapper unavailable.}
   /images/{id}:
     get:
       tags:
